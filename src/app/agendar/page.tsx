@@ -1,56 +1,20 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { formatarCPF, horariosPorDia, obterDiaSemana } from "@/lib/horarios";
 
 const servicos = [
-  "Consulta inicial (R$280,00)",
-  "Consulta sessão (R$280,00)",
-  "Pacote com 10 ou mais sessões (R$210,00 cada sessão)",
-  "Avaliação psicológica para cirurgias bariátricas, vasectomia entre outras cirurgias (R$750,00)",
-  "Avaliação Neuropsicologia - TDAH (R$1050,00)",
-  "Avaliação Neuropsicologia - TEA (R$1050,00)",
-  "Avaliação Neuropsicologia - QI (R$1050,00)",
-  "Laudos neuropsicológicos (R$1050,00)",
-  "Aplicação ABA (R$280,00)",
-  "Pacote com 10 ou mais sessões ABA (R$210,00 cada sessão)",
-  "Laudos de cirurgia bariátrica, vasectomia e entre outras cirurgias (Consulte valores)",
+  "Consulta inicial",
+  "Consulta sessão",
+  "Pacote com 10 ou mais sessões",
+  "Avaliação Neuropsicologia - TDAH",
+  "Avaliação Neuropsicologia - TEA",
+  "Avaliação Neuropsicologia - QI",
+  "Laudos neuropsicológicos",
+  "Aplicação ABA",
+  "Pacote com 10 ou mais sessões ABA",
+  "Laudos de cirurgia bariátrica, vasectomia e entre outras cirurgias",
 ];
-
-const horariosPorDia: Record<string, string[]> = {
-  "Segunda-feira": ["19:00", "20:00", "21:00"],
-  "Terça-feira": ["13:00", "14:00", "15:00", "16:00"],
-  "Quarta-feira": ["19:00", "20:00", "21:00", "22:00"],
-  "Quinta-feira": ["13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00"],
-  "Sexta-feira": ["19:00", "20:00", "21:00", "22:00"],
-  "Sábado": ["13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00"],
-  Domingo: [],
-};
-
-function formatarCPF(valor: string) {
-  const numeros = valor.replace(/\D/g, "").slice(0, 11);
-
-  return numeros
-    .replace(/(\d{3})(\d)/, "$1.$2")
-    .replace(/(\d{3})(\d)/, "$1.$2")
-    .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
-}
-
-function obterDiaSemana(data: string) {
-  if (!data) return "";
-
-  const dia = new Date(`${data}T12:00:00`);
-  const nomes = [
-    "Domingo",
-    "Segunda-feira",
-    "Terça-feira",
-    "Quarta-feira",
-    "Quinta-feira",
-    "Sexta-feira",
-    "Sábado",
-  ];
-
-  return nomes[dia.getDay()];
-}
 
 export default function AgendarPage() {
   const [servico, setServico] = useState("");
@@ -58,8 +22,11 @@ export default function AgendarPage() {
   const [horario, setHorario] = useState("");
   const [nome, setNome] = useState("");
   const [cpf, setCpf] = useState("");
+  const [email, setEmail] = useState("");
   const [telefone, setTelefone] = useState("");
   const [mensagem, setMensagem] = useState("");
+  const [enviando, setEnviando] = useState(false);
+  const [horariosOcupados, setHorariosOcupados] = useState<string[]>([]);
 
   const diaSemana = useMemo(() => obterDiaSemana(data), [data]);
 
@@ -70,55 +37,103 @@ export default function AgendarPage() {
 
   const dataValida = data ? horariosDisponiveis.length > 0 : false;
 
+  useEffect(() => {
+    async function carregarHorarios() {
+      if (!data) {
+        setHorariosOcupados([]);
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/horarios-ocupados?data=${data}`);
+        const json = await res.json();
+        setHorariosOcupados(json.horarios || []);
+      } catch {
+        setHorariosOcupados([]);
+      }
+    }
+
+    carregarHorarios();
+  }, [data]);
+
   function limparAgendamento() {
     setServico("");
     setData("");
     setHorario("");
     setNome("");
     setCpf("");
+    setEmail("");
     setTelefone("");
     setMensagem("");
+    setHorariosOcupados([]);
   }
 
-  function continuarParaPagamento() {
-    if (!servico || !data || !horario || !nome || cpf.replace(/\D/g, "").length !== 11) {
-      setMensagem("Preencha todos os campos obrigatórios para continuar.");
+  async function salvarAgendamento() {
+    setMensagem("");
+
+    if (!servico || !data || !horario || !nome || !email) {
+      setMensagem("Preencha serviço, data, horário, nome e e-mail.");
       return;
     }
 
-    const resumo = {
-      servico,
-      data,
-      diaSemana,
-      horario,
-      nome,
-      cpf,
-      telefone,
-    };
+    setEnviando(true);
 
-    localStorage.setItem("agendamento_daiane", JSON.stringify(resumo));
-    setMensagem("Agendamento preenchido com sucesso. Indo para o pagamento...");
-    window.location.href = "/pagamento";
+    try {
+      const res = await fetch("/api/agendar", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          nome,
+          email,
+          telefone,
+          servico,
+          data,
+          horario,
+        }),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        setMensagem(json.error || "Erro ao salvar agendamento.");
+        if (res.status === 409) {
+          setHorario("");
+        }
+        setEnviando(false);
+        return;
+      }
+
+      setMensagem("Agendamento realizado com sucesso!");
+      setTimeout(() => {
+        window.location.href = "/confirmacao";
+      }, 1200);
+    } catch {
+      setMensagem("Erro de conexão ao salvar o agendamento.");
+    } finally {
+      setEnviando(false);
+    }
   }
 
   return (
     <div className="min-h-screen bg-transparent px-6 py-16">
       <section className="mx-auto max-w-7xl">
         <div className="mx-auto max-w-3xl text-center">
-          <h1 className="text-4xl font-bold text-slate-800">Agendamento online</h1>
+          <h1 className="text-4xl font-bold text-slate-800">
+            Agendamento on-line
+          </h1>
           <p className="mt-4 text-lg text-slate-600">
             Escolha o serviço, selecione um horário disponível e preencha seus dados.
           </p>
           <p className="mt-2 text-slate-500">
-            Psicóloga Clínica | Neuropsicologia | Psicanalista
+            Psicóloga Clínica | Psicanalista | Neuropsicóloga
           </p>
-          <p className="mt-1 text-slate-500">
-            CRP: 12/29150
-          </p>
+          <p className="mt-1 text-slate-500">CRP: 12/29150</p>
         </div>
 
         <div className="mt-12 grid gap-8 lg:grid-cols-3">
-          <div className="lg:col-span-2 rounded-3xl bg-white/90 p-6 shadow-md backdrop-blur-sm">
+          <div className="rounded-3xl bg-white/90 p-6 shadow-md backdrop-blur-sm lg:col-span-2">
             <div className="space-y-8">
               <div>
                 <label className="mb-3 block text-sm font-semibold text-slate-700">
@@ -152,11 +167,13 @@ export default function AgendarPage() {
                   }}
                   className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-4 text-slate-800"
                 />
+
                 {data && (
                   <p className="mt-2 text-sm text-slate-600">
                     Dia selecionado: <strong>{diaSemana || "Data inválida"}</strong>
                   </p>
                 )}
+
                 {data && !dataValida && (
                   <p className="mt-2 text-sm text-red-600">
                     Não há atendimento neste dia. Escolha outra data.
@@ -171,20 +188,27 @@ export default function AgendarPage() {
 
                 {dataValida ? (
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-                    {horariosDisponiveis.map((item) => (
-                      <button
-                        key={item}
-                        type="button"
-                        onClick={() => setHorario(item)}
-                        className={`rounded-2xl border px-4 py-4 text-sm font-semibold transition ${
-                          horario === item
-                            ? "border-slate-800 bg-slate-800 text-white"
-                            : "border-slate-300 bg-white text-slate-700 hover:border-slate-500"
-                        }`}
-                      >
-                        {item}
-                      </button>
-                    ))}
+                    {horariosDisponiveis.map((item) => {
+                      const ocupado = horariosOcupados.includes(item);
+
+                      return (
+                        <button
+                          key={item}
+                          type="button"
+                          disabled={ocupado}
+                          onClick={() => setHorario(item)}
+                          className={`rounded-2xl border px-4 py-4 text-sm font-semibold transition ${
+                            ocupado
+                              ? "cursor-not-allowed border-red-200 bg-red-50 text-red-400"
+                              : horario === item
+                              ? "border-slate-800 bg-slate-800 text-white"
+                              : "border-slate-300 bg-white text-slate-700 hover:border-slate-500"
+                          }`}
+                        >
+                          {ocupado ? `${item} • Ocupado` : item}
+                        </button>
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-4 text-sm text-slate-500">
@@ -209,15 +233,23 @@ export default function AgendarPage() {
 
                   <input
                     type="text"
-                    placeholder="CPF"
+                    placeholder="CPF (opcional)"
                     value={cpf}
                     onChange={(e) => setCpf(formatarCPF(e.target.value))}
                     className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-4 text-slate-800"
                   />
 
                   <input
+                    type="email"
+                    placeholder="E-mail"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-4 text-slate-800"
+                  />
+
+                  <input
                     type="text"
-                    placeholder="Telefone (opcional)"
+                    placeholder="Telefone"
                     value={telefone}
                     onChange={(e) => setTelefone(e.target.value)}
                     className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-4 text-slate-800"
@@ -237,22 +269,25 @@ export default function AgendarPage() {
                   onClick={limparAgendamento}
                   className="rounded-2xl border border-slate-300 bg-white px-6 py-4 font-semibold text-slate-700 hover:bg-slate-100"
                 >
-                  Limpar agendamento
+                  Limpar
                 </button>
 
                 <button
                   type="button"
-                  onClick={continuarParaPagamento}
-                  className="rounded-2xl bg-slate-800 px-6 py-4 font-semibold text-white hover:bg-slate-700"
+                  onClick={salvarAgendamento}
+                  disabled={enviando}
+                  className="rounded-2xl bg-slate-800 px-6 py-4 font-semibold text-white hover:bg-slate-700 disabled:opacity-60"
                 >
-                  Continuar para pagamento
+                  {enviando ? "Salvando..." : "Confirmar agendamento"}
                 </button>
               </div>
             </div>
           </div>
 
           <div className="rounded-3xl bg-white/90 p-6 shadow-md backdrop-blur-sm">
-            <h2 className="text-xl font-bold text-slate-800">Resumo do agendamento</h2>
+            <h2 className="text-xl font-bold text-slate-800">
+              Resumo do agendamento
+            </h2>
 
             <div className="mt-6 space-y-4 text-sm text-slate-600">
               <div>
@@ -281,13 +316,13 @@ export default function AgendarPage() {
               </div>
 
               <div>
-                <p className="font-semibold text-slate-800">CPF</p>
-                <p>{cpf || "CPF ainda não preenchido"}</p>
+                <p className="font-semibold text-slate-800">E-mail</p>
+                <p>{email || "E-mail ainda não preenchido"}</p>
               </div>
 
               <div>
                 <p className="font-semibold text-slate-800">Telefone</p>
-                <p>{telefone || "Não informado"}</p>
+                <p>{telefone || "Telefone ainda não preenchido"}</p>
               </div>
             </div>
           </div>
