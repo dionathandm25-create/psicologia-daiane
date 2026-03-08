@@ -1,59 +1,100 @@
 export default function ContatoPage() {
   return (
-    <div className="min-h-screen bg-transparent px-6 py-16">
-      <section className="mx-auto max-w-5xl">
-        <div className="rounded-3xl bg-white/90 p-8 shadow-md backdrop-blur-sm">
-          <div className="mx-auto max-w-3xl text-center">
-            <h1 className="text-4xl font-bold text-slate-800">Contato</h1>
-            <p className="mt-4 text-lg text-slate-600">
-              Entre em contato para tirar dúvidas ou iniciar seu agendamento.
-            </p>
-          </div>
+    <div className="min-h-screen bg-transparent px-6 py-16 flex justify-center">
+      
+      <div className="max-w-xl w-full rounded-3xl bg-white/90 p-10 shadow-md text-center">
 
-          <div className="mt-12 grid gap-6 md:grid-cols-2">
-            <div className="rounded-2xl bg-white/80 p-6 shadow-sm">
-              <h2 className="text-xl font-semibold text-slate-800">WhatsApp</h2>
-              <p className="mt-3 text-slate-600">
-                Atendimento rápido para dúvidas e confirmação de consultas.
-              </p>
-              <a
-                href="https://wa.me/5547999999999?text=Olá! Quero agendar uma consulta."
-                target="_blank"
-                className="mt-6 inline-flex rounded-xl bg-green-500 px-6 py-3 font-semibold text-white hover:bg-green-600"
-              >
-                Falar no WhatsApp
-              </a>
-            </div>
+        <h1 className="text-3xl font-bold text-slate-800">
+          Contato
+        </h1>
 
-            <div className="rounded-2xl bg-white/80 p-6 shadow-sm">
-              <h2 className="text-xl font-semibold text-slate-800">Agendamento</h2>
-              <p className="mt-3 text-slate-600">
-                Faça seu agendamento online com praticidade.
-              </p>
-              <a
-                href="/agendar"
-                className="mt-6 inline-flex rounded-xl bg-slate-800 px-6 py-3 font-semibold text-white hover:bg-slate-700"
-              >
-                Ir para agendamento
-              </a>
-            </div>
+        <p className="mt-4 text-slate-600">
+          Entre em contato para tirar dúvidas ou iniciar seu agendamento.
+        </p>
 
-            <div className="rounded-2xl bg-white/80 p-6 shadow-sm">
-              <h2 className="text-xl font-semibold text-slate-800">Endereço</h2>
-              <p className="mt-3 text-slate-600">
-                Espaço reservado para endereço futuro da clínica.
-              </p>
-            </div>
 
-            <div className="rounded-2xl bg-white/80 p-6 shadow-sm">
-              <h2 className="text-xl font-semibold text-slate-800">E-mail</h2>
-              <p className="mt-3 text-slate-600">
-                Espaço reservado para e-mail profissional futuro.
-              </p>
-            </div>
-          </div>
+        {/* WHATSAPP */}
+
+        <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 text-left shadow-sm">
+
+          <h2 className="text-xl font-semibold text-slate-800">
+            WhatsApp
+          </h2>
+
+          <p className="mt-2 text-slate-600">
+            Atendimento rápido para dúvidas e confirmação de consultas.
+          </p>
+
+          <a
+            href="https://wa.me/5547992034457"
+            className="mt-4 inline-block rounded-2xl bg-green-500 px-6 py-3 text-white font-semibold hover:bg-green-600"
+          >
+            Falar no WhatsApp
+          </a>
+
         </div>
-      </section>
+
+
+        {/* AGENDAMENTO */}
+
+        <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-6 text-left shadow-sm">
+
+          <h2 className="text-xl font-semibold text-slate-800">
+            Agendamento
+          </h2>
+
+          <p className="mt-2 text-slate-600">
+            Faça seu agendamento online com praticidade.
+          </p>
+
+          <a
+            href="/agendar"
+            className="mt-4 inline-block rounded-2xl bg-slate-800 px-6 py-3 text-white font-semibold hover:bg-slate-900"
+          >
+            Ir para agendamento
+          </a>
+
+        </div>
+
+
+        {/* ENDEREÇO */}
+
+        <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-6 text-left shadow-sm">
+
+          <h2 className="text-xl font-semibold text-slate-800">
+            Endereço
+          </h2>
+
+          <p className="mt-2 text-slate-600">
+            Espaço reservado para endereço futuro da clínica.
+          </p>
+
+        </div>
+
+
+        {/* EMAIL */}
+
+        <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-6 text-left shadow-sm">
+
+          <h2 className="text-xl font-semibold text-slate-800">
+            E-mail
+          </h2>
+
+          <p className="mt-2 text-slate-600">
+            Entre em contato também pelo e-mail profissional:
+          </p>
+
+          <a
+            href="mailto:psi.daianedamasceno@gmail.com"
+            className="mt-3 block text-blue-600 font-semibold hover:underline"
+          >
+            psi.daianedamasceno@gmail.com
+          </a>
+
+        </div>
+
+      </div>
+
     </div>
   );
 }
