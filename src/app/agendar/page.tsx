@@ -5,28 +5,61 @@ import { createClient } from "@/lib/supabase/client";
 import { formatarCPF, horariosPorDia, obterDiaSemana } from "@/lib/horarios";
 
 const servicos = [
-  "Consulta inicial",
-  "Consulta sessão",
-  "Pacote com 10 ou mais sessões",
   {
-  nome: "Avaliação neuropsicológica - TDAH",
-  valor: 1050,
-  label: "R$1050,00",
-},
-{
-  nome: "Avaliação neuropsicológica - TEA",
-  valor: 1050,
-  label: "R$1050,00",
-},
-{
-  nome: "Avaliação neuropsicológica - QI",
-  valor: 1050,
-  label: "R$1050,00",
-},
-  "Laudos neuropsicológicos",
-  "Aplicação ABA",
-  "Pacote com 10 ou mais sessões ABA",
-  "Laudos de cirurgia bariátrica, vasectomia e entre outras cirurgias",
+    nome: "Consulta inicial",
+    valor: 280,
+    label: "R$280,00",
+  },
+  {
+    nome: "Consulta sessão",
+    valor: 280,
+    label: "R$280,00",
+  },
+  {
+    nome: "Pacote com 10 ou mais sessões",
+    valor: 210,
+    label: "R$210,00 cada sessão",
+  },
+  {
+    nome: "Avaliação psicológica para cirurgias bariátricas, vasectomia entre outras cirurgias",
+    valor: null,
+    label: "Consulte valores",
+  },
+  {
+    nome: "Avaliação neuropsicológica - TDAH",
+    valor: 1050,
+    label: "R$1050,00",
+  },
+  {
+    nome: "Avaliação neuropsicológica - TEA",
+    valor: 1050,
+    label: "R$1050,00",
+  },
+  {
+    nome: "Avaliação neuropsicológica - QI",
+    valor: 1050,
+    label: "R$1050,00",
+  },
+  {
+    nome: "Laudos neuropsicológicos",
+    valor: 1050,
+    label: "R$1050,00",
+  },
+  {
+    nome: "Aplicação ABA",
+    valor: 280,
+    label: "R$280,00",
+  },
+  {
+    nome: "Pacote com 10 ou mais sessões ABA",
+    valor: 210,
+    label: "R$210,00 cada sessão",
+  },
+  {
+    nome: "Laudos de cirurgia bariátrica, vasectomia e entre outras cirurgias",
+    valor: 750,
+    label: "R$750,00",
+  },
 ];
 
 export default function AgendarPage() {
@@ -49,6 +82,8 @@ export default function AgendarPage() {
   }, [diaSemana]);
 
   const dataValida = data ? horariosDisponiveis.length > 0 : false;
+
+  const servicoSelecionado = servicos.find((item) => item.nome === servico);
 
   useEffect(() => {
     async function carregarHorariosOcupados() {
@@ -126,6 +161,14 @@ export default function AgendarPage() {
         JSON.stringify(agendamentoCriado)
       );
 
+      if (servicoSelecionado?.valor === null) {
+        setMensagem(
+          "Agendamento salvo. Este serviço está com valor sob consulta. Entre em contato para finalizar."
+        );
+        setEnviando(false);
+        return;
+      }
+
       setMensagem("Agendamento salvo com sucesso! Indo para pagamento...");
 
       setTimeout(() => {
@@ -161,6 +204,7 @@ export default function AgendarPage() {
                 <label className="mb-3 block text-sm font-semibold text-slate-700">
                   1. Escolha o serviço
                 </label>
+
                 <select
                   value={servico}
                   onChange={(e) => setServico(e.target.value)}
@@ -168,8 +212,8 @@ export default function AgendarPage() {
                 >
                   <option value="">Selecione um serviço</option>
                   {servicos.map((item) => (
-                    <option key={item} value={item}>
-                      {item}
+                    <option key={item.nome} value={item.nome}>
+                      {item.nome} ({item.label})
                     </option>
                   ))}
                 </select>
@@ -179,6 +223,7 @@ export default function AgendarPage() {
                 <label className="mb-3 block text-sm font-semibold text-slate-700">
                   2. Escolha a data
                 </label>
+
                 <input
                   type="date"
                   value={data}
@@ -314,7 +359,11 @@ export default function AgendarPage() {
             <div className="mt-6 space-y-4 text-sm text-slate-600">
               <div>
                 <p className="font-semibold text-slate-800">Serviço</p>
-                <p>{servico || "Nenhum serviço selecionado"}</p>
+                <p>
+                  {servicoSelecionado
+                    ? `${servicoSelecionado.nome} (${servicoSelecionado.label})`
+                    : "Nenhum serviço selecionado"}
+                </p>
               </div>
 
               <div>

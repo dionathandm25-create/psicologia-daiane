@@ -1,6 +1,19 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
+const tabelaPrecos: Record<string, number> = {
+  "Consulta inicial": 280,
+  "Consulta sessão": 280,
+  "Pacote com 10 ou mais sessões": 210,
+  "Avaliação neuropsicológica - TDAH": 1050,
+  "Avaliação neuropsicológica - TEA": 1050,
+  "Avaliação neuropsicológica - QI": 1050,
+  "Laudos neuropsicológicos": 1050,
+  "Aplicação ABA": 280,
+  "Pacote com 10 ou mais sessões ABA": 210,
+  "Laudos de cirurgia bariátrica, vasectomia e entre outras cirurgias": 750,
+};
+
 export async function POST(req: Request) {
   try {
     const { agendamentoId, servico } = await req.json();
@@ -13,6 +26,18 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { error: "MP_ACCESS_TOKEN não configurado." },
         { status: 500 }
+      );
+    }
+
+    const valor = tabelaPrecos[servico];
+
+    if (!valor) {
+      return NextResponse.json(
+        {
+          error:
+            "Este serviço está sem valor definido para pagamento online. Entre em contato para consultar.",
+        },
+        { status: 400 }
       );
     }
 
@@ -32,7 +57,7 @@ export async function POST(req: Request) {
               title: servico || "Consulta psicológica",
               quantity: 1,
               currency_id: "BRL",
-              unit_price: 280,
+              unit_price: valor,
             },
           ],
           payment_methods: {
