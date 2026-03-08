@@ -13,6 +13,7 @@ type Agendamento = {
   data: string;
   horario: string;
   created_at: string;
+  payment_status?: string;
 };
 
 export default function AdminPage() {
@@ -21,6 +22,23 @@ export default function AdminPage() {
   const [email, setEmail] = useState("");
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
   const [erro, setErro] = useState("");
+
+  async function carregarAgendamentos() {
+    const supabase = createClient();
+
+    const { data, error } = await supabase
+      .from("agendamentos")
+      .select("*")
+      .order("data", { ascending: true })
+      .order("horario", { ascending: true });
+
+    if (error) {
+      setErro("Você entrou, mas não foi possível carregar os agendamentos.");
+    } else {
+      setAgendamentos(data || []);
+      setErro("");
+    }
+  }
 
   useEffect(() => {
     async function carregar() {
@@ -39,18 +57,7 @@ export default function AdminPage() {
       setLogado(true);
       setEmail(session.user.email || "");
 
-      const { data, error } = await supabase
-        .from("agendamentos")
-        .select("*")
-        .order("data", { ascending: true })
-        .order("horario", { ascending: true });
-
-      if (error) {
-        setErro("Você entrou, mas não foi possível carregar os agendamentos.");
-      } else {
-        setAgendamentos(data || []);
-      }
-
+      await carregarAgendamentos();
       setLoading(false);
     }
 
@@ -66,6 +73,9 @@ export default function AdminPage() {
   async function cancelarAgendamento(id: number) {
     const supabase = createClient();
 
+    const confirmar = window.confirm("Deseja realmente cancelar esta consulta?");
+    if (!confirmar) return;
+
     const { error } = await supabase
       .from("agendamentos")
       .delete()
@@ -76,8 +86,8 @@ export default function AdminPage() {
       return;
     }
 
+    setAgendamentos((listaAtual) => listaAtual.filter((item) => item.id !== id));
     alert("Consulta cancelada com sucesso.");
-    window.location.reload();
   }
 
   if (loading) {
@@ -140,6 +150,7 @@ export default function AdminPage() {
                 <th className="px-4 py-3">Serviço</th>
                 <th className="px-4 py-3">Data</th>
                 <th className="px-4 py-3">Horário</th>
+                <th className="px-4 py-3">Pagamento</th>
                 <th className="px-4 py-3">Ação</th>
               </tr>
             </thead>
@@ -147,7 +158,7 @@ export default function AdminPage() {
             <tbody>
               {agendamentos.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-6 text-center text-slate-500">
+                  <td colSpan={8} className="px-4 py-6 text-center text-slate-500">
                     Nenhum agendamento encontrado.
                   </td>
                 </tr>
@@ -160,6 +171,7 @@ export default function AdminPage() {
                     <td className="px-4 py-3">{item.servico}</td>
                     <td className="px-4 py-3">{item.data}</td>
                     <td className="px-4 py-3">{item.horario}</td>
+                    <td className="px-4 py-3">{item.payment_status || "pendente"}</td>
                     <td className="px-4 py-3">
                       <button
                         onClick={() => cancelarAgendamento(item.id)}
