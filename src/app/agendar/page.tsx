@@ -1,60 +1,23 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useMemo, useState } from "react";
 import { formatarCPF, horariosPorDia, obterDiaSemana } from "@/lib/horarios";
 
 const servicos = [
-  {
-    nome: "Consulta inicial",
-    valor: 280,
-    label: "R$280,00",
-  },
-  {
-    nome: "Consulta sessão",
-    valor: 280,
-    label: "R$280,00",
-  },
-  {
-    nome: "Pacote com 10 ou mais sessões",
-    valor: 210,
-    label: "R$210,00 cada sessão",
-  },
+  { nome: "Consulta inicial", valor: 280, label: "R$280,00" },
+  { nome: "Consulta sessão", valor: 280, label: "R$280,00" },
+  { nome: "Pacote com 10 ou mais sessões", valor: 210, label: "R$210,00 cada sessão" },
   {
     nome: "Avaliação psicológica para cirurgias bariátricas, vasectomia entre outras cirurgias",
     valor: null,
     label: "Consulte valores",
   },
-  {
-    nome: "Avaliação neuropsicológica - TDAH",
-    valor: 1050,
-    label: "R$1050,00",
-  },
-  {
-    nome: "Avaliação neuropsicológica - TEA",
-    valor: 1050,
-    label: "R$1050,00",
-  },
-  {
-    nome: "Avaliação neuropsicológica - QI",
-    valor: 1050,
-    label: "R$1050,00",
-  },
-  {
-    nome: "Laudos neuropsicológicos",
-    valor: 1050,
-    label: "R$1050,00",
-  },
-  {
-    nome: "Aplicação ABA",
-    valor: 280,
-    label: "R$280,00",
-  },
-  {
-    nome: "Pacote com 10 ou mais sessões ABA",
-    valor: 210,
-    label: "R$210,00 cada sessão",
-  },
+  { nome: "Avaliação neuropsicológica - TDAH", valor: 1050, label: "R$1050,00" },
+  { nome: "Avaliação neuropsicológica - TEA", valor: 1050, label: "R$1050,00" },
+  { nome: "Avaliação neuropsicológica - QI", valor: 1050, label: "R$1050,00" },
+  { nome: "Laudos neuropsicológicos", valor: 1050, label: "R$1050,00" },
+  { nome: "Aplicação ABA", valor: 280, label: "R$280,00" },
+  { nome: "Pacote com 10 ou mais sessões ABA", valor: 210, label: "R$210,00 cada sessão" },
   {
     nome: "Laudos de cirurgia bariátrica, vasectomia e entre outras cirurgias",
     valor: 750,
@@ -64,15 +27,15 @@ const servicos = [
 
 export default function AgendarPage() {
   const [servico, setServico] = useState("");
+  const [abrirServicos, setAbrirServicos] = useState(false);
+
   const [data, setData] = useState("");
   const [horario, setHorario] = useState("");
+
   const [nome, setNome] = useState("");
   const [cpf, setCpf] = useState("");
   const [email, setEmail] = useState("");
   const [telefone, setTelefone] = useState("");
-  const [mensagem, setMensagem] = useState("");
-  const [enviando, setEnviando] = useState(false);
-  const [horariosOcupados, setHorariosOcupados] = useState<string[]>([]);
 
   const diaSemana = useMemo(() => obterDiaSemana(data), [data]);
 
@@ -81,324 +44,193 @@ export default function AgendarPage() {
     return horariosPorDia[diaSemana] || [];
   }, [diaSemana]);
 
-  const dataValida = data ? horariosDisponiveis.length > 0 : false;
-
   const servicoSelecionado = servicos.find((item) => item.nome === servico);
-
-  useEffect(() => {
-    async function carregarHorariosOcupados() {
-      if (!data) {
-        setHorariosOcupados([]);
-        return;
-      }
-
-      try {
-        const resposta = await fetch(`/api/horarios-ocupados?data=${data}`);
-        const json = await resposta.json();
-        setHorariosOcupados(json.horarios || []);
-      } catch {
-        setHorariosOcupados([]);
-      }
-    }
-
-    carregarHorariosOcupados();
-  }, [data]);
-
-  function limparAgendamento() {
-    setServico("");
-    setData("");
-    setHorario("");
-    setNome("");
-    setCpf("");
-    setEmail("");
-    setTelefone("");
-    setMensagem("");
-    setHorariosOcupados([]);
-  }
-
-  async function salvarAgendamento() {
-    setMensagem("");
-
-    if (!servico || !data || !horario || !nome || !email) {
-      setMensagem("Preencha serviço, data, horário, nome e e-mail.");
-      return;
-    }
-
-    setEnviando(true);
-
-    try {
-      const supabase = createClient();
-
-      const { data: agendamentoCriado, error } = await supabase
-        .from("agendamentos")
-        .insert([
-          {
-            nome,
-            email,
-            telefone,
-            servico,
-            data,
-            horario,
-            payment_status: "pendente",
-          },
-        ])
-        .select()
-        .single();
-
-      if (error) {
-        if (error.code === "23505") {
-          setMensagem("Esse horário já foi ocupado. Escolha outro.");
-          setHorario("");
-        } else {
-          setMensagem("Erro ao salvar agendamento.");
-        }
-        setEnviando(false);
-        return;
-      }
-
-      localStorage.setItem(
-        "agendamento_daiane",
-        JSON.stringify(agendamentoCriado)
-      );
-
-      if (servicoSelecionado?.valor === null) {
-        setMensagem(
-          "Agendamento salvo. Este serviço está com valor sob consulta. Entre em contato para finalizar."
-        );
-        setEnviando(false);
-        return;
-      }
-
-      setMensagem("Agendamento salvo com sucesso! Indo para pagamento...");
-
-      setTimeout(() => {
-        window.location.href = "/pagamento";
-      }, 1000);
-    } catch {
-      setMensagem("Erro de conexão ao salvar o agendamento.");
-    } finally {
-      setEnviando(false);
-    }
-  }
 
   return (
     <div className="min-h-screen bg-transparent px-6 py-16">
-      <section className="mx-auto max-w-7xl">
-        <div className="mx-auto max-w-3xl text-center">
-          <h1 className="text-4xl font-bold text-slate-800">
-            Agendamento on-line
-          </h1>
-          <p className="mt-4 text-lg text-slate-600">
-            Escolha o serviço, selecione um horário disponível e preencha seus dados.
-          </p>
-          <p className="mt-2 text-slate-500">
-            Psicóloga Clínica | Psicanalista | Neuropsicóloga
-          </p>
-          <p className="mt-1 text-slate-500">CRP: 12/29150</p>
-        </div>
 
-        <div className="mt-12 grid gap-8 lg:grid-cols-3">
-          <div className="rounded-3xl border border-rose-100 bg-rose-50/80 p-6 shadow-md backdrop-blur-sm lg:col-span-2">
-            <div className="space-y-8">
-              <div>
-                <label className="mb-3 block text-sm font-semibold text-slate-700">
-                  1. Escolha o serviço
-                </label>
+      <section className="mx-auto max-w-5xl">
 
-                <select
-                  value={servico}
-                  onChange={(e) => setServico(e.target.value)}
-                  className="w-full rounded-2xl border border-rose-200 bg-white px-4 py-4 text-slate-800"
-                >
-                  <option value="">Selecione um serviço</option>
+        <h1 className="text-4xl font-bold text-center text-slate-800">
+          Agendamento on-line
+        </h1>
+
+        <div className="mt-12 rounded-3xl border border-rose-100 bg-rose-50/90 p-8 shadow-lg">
+
+          {/* SERVIÇO */}
+
+          <div className="mb-8">
+
+            <label className="mb-3 block text-sm font-semibold text-slate-700">
+              1. Escolha o serviço
+            </label>
+
+            <button
+              type="button"
+              onClick={() => setAbrirServicos(true)}
+              className="w-full rounded-2xl border border-rose-200 bg-white px-4 py-4 text-left text-slate-800"
+            >
+              {servicoSelecionado
+                ? `${servicoSelecionado.nome} (${servicoSelecionado.label})`
+                : "Selecione um serviço"}
+            </button>
+
+          </div>
+
+          {/* MODAL SERVIÇOS */}
+
+          {abrirServicos && (
+
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+
+              <div className="max-h-[80vh] w-full max-w-xl overflow-y-auto rounded-3xl bg-rose-50 p-6 shadow-xl">
+
+                <h3 className="mb-4 text-xl font-bold text-slate-800">
+                  Selecione um serviço
+                </h3>
+
+                <div className="space-y-3">
+
                   {servicos.map((item) => (
-                    <option key={item.nome} value={item.nome}>
-                      {item.nome} ({item.label})
-                    </option>
+
+                    <button
+                      key={item.nome}
+                      type="button"
+                      onClick={() => {
+                        setServico(item.nome);
+                        setAbrirServicos(false);
+                      }}
+                      className={`w-full rounded-2xl border px-4 py-4 text-left ${
+                        servico === item.nome
+                          ? "border-rose-400 bg-white"
+                          : "border-rose-200 bg-white hover:bg-rose-100"
+                      }`}
+                    >
+
+                      <span className="block font-semibold text-slate-800">
+                        {item.nome}
+                      </span>
+
+                      <span className="text-sm text-slate-600">
+                        {item.label}
+                      </span>
+
+                    </button>
+
                   ))}
-                </select>
-              </div>
 
-              <div>
-                <label className="mb-3 block text-sm font-semibold text-slate-700">
-                  2. Escolha a data
-                </label>
-
-                <input
-                  type="date"
-                  value={data}
-                  onChange={(e) => {
-                    setData(e.target.value);
-                    setHorario("");
-                    setMensagem("");
-                  }}
-                  className="w-full rounded-2xl border border-rose-200 bg-white px-4 py-4 text-slate-800"
-                />
-
-                {data && (
-                  <p className="mt-2 text-sm text-slate-600">
-                    Dia selecionado: <strong>{diaSemana || "Data inválida"}</strong>
-                  </p>
-                )}
-
-                {data && !dataValida && (
-                  <p className="mt-2 text-sm text-red-600">
-                    Não há atendimento neste dia. Escolha outra data.
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="mb-3 block text-sm font-semibold text-slate-700">
-                  3. Escolha o horário
-                </label>
-
-                {dataValida ? (
-                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-                    {horariosDisponiveis.map((item) => {
-                      const ocupado = horariosOcupados.includes(item);
-
-                      return (
-                        <button
-                          key={item}
-                          type="button"
-                          disabled={ocupado}
-                          onClick={() => setHorario(item)}
-                          className={`rounded-2xl border px-4 py-4 text-sm font-semibold transition ${
-                            ocupado
-                              ? "cursor-not-allowed border-red-200 bg-red-50 text-red-400"
-                              : horario === item
-                              ? "border-slate-800 bg-slate-800 text-white"
-                              : "border-rose-200 bg-white text-slate-700 hover:border-slate-500"
-                          }`}
-                        >
-                          {ocupado ? `${item} • Ocupado` : item}
-                        </button>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="rounded-2xl border border-dashed border-rose-200 bg-white p-4 text-sm text-slate-500">
-                    Selecione uma data válida para ver os horários disponíveis.
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <label className="mb-3 block text-sm font-semibold text-slate-700">
-                  4. Dados do paciente
-                </label>
-
-                <div className="grid gap-4">
-                  <input
-                    type="text"
-                    placeholder="Nome completo"
-                    value={nome}
-                    onChange={(e) => setNome(e.target.value)}
-                    className="w-full rounded-2xl border border-rose-200 bg-white px-4 py-4 text-slate-800"
-                  />
-
-                  <input
-                    type="text"
-                    placeholder="CPF (opcional)"
-                    value={cpf}
-                    onChange={(e) => setCpf(formatarCPF(e.target.value))}
-                    className="w-full rounded-2xl border border-rose-200 bg-white px-4 py-4 text-slate-800"
-                  />
-
-                  <input
-                    type="email"
-                    placeholder="E-mail"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full rounded-2xl border border-rose-200 bg-white px-4 py-4 text-slate-800"
-                  />
-
-                  <input
-                    type="text"
-                    placeholder="Telefone"
-                    value={telefone}
-                    onChange={(e) => setTelefone(e.target.value)}
-                    className="w-full rounded-2xl border border-rose-200 bg-white px-4 py-4 text-slate-800"
-                  />
                 </div>
-              </div>
-
-              {mensagem && (
-                <div className="rounded-2xl bg-white px-4 py-3 text-sm text-slate-700">
-                  {mensagem}
-                </div>
-              )}
-
-              <div className="flex flex-col gap-3 sm:flex-row">
-                <button
-                  type="button"
-                  onClick={limparAgendamento}
-                  className="rounded-2xl border border-rose-200 bg-white px-6 py-4 font-semibold text-slate-700 hover:bg-rose-50"
-                >
-                  Limpar
-                </button>
 
                 <button
-                  type="button"
-                  onClick={salvarAgendamento}
-                  disabled={enviando}
-                  className="rounded-2xl bg-slate-800 px-6 py-4 font-semibold text-white hover:bg-slate-700 disabled:opacity-60"
+                  onClick={() => setAbrirServicos(false)}
+                  className="mt-6 w-full rounded-2xl bg-slate-800 py-3 text-white"
                 >
-                  {enviando ? "Salvando..." : "Confirmar agendamento"}
+                  Fechar
                 </button>
+
               </div>
+
             </div>
+
+          )}
+
+          {/* DATA */}
+
+          <div className="mb-8">
+
+            <label className="mb-3 block text-sm font-semibold text-slate-700">
+              2. Escolha a data
+            </label>
+
+            <input
+              type="date"
+              value={data}
+              onChange={(e) => setData(e.target.value)}
+              className="w-full rounded-2xl border border-rose-200 bg-white px-4 py-4"
+            />
+
           </div>
 
-          <div className="rounded-3xl border border-rose-100 bg-rose-50/80 p-6 shadow-md backdrop-blur-sm">
-            <h2 className="text-xl font-bold text-slate-800">
-              Resumo do agendamento
-            </h2>
+          {/* HORÁRIOS */}
 
-            <div className="mt-6 space-y-4 text-sm text-slate-600">
-              <div>
-                <p className="font-semibold text-slate-800">Serviço</p>
-                <p>
-                  {servicoSelecionado
-                    ? `${servicoSelecionado.nome} (${servicoSelecionado.label})`
-                    : "Nenhum serviço selecionado"}
-                </p>
-              </div>
+          <div className="mb-8">
 
-              <div>
-                <p className="font-semibold text-slate-800">Data</p>
-                <p>{data || "Nenhuma data selecionada"}</p>
-              </div>
+            <label className="mb-3 block text-sm font-semibold text-slate-700">
+              3. Escolha o horário
+            </label>
 
-              <div>
-                <p className="font-semibold text-slate-800">Dia da semana</p>
-                <p>{diaSemana || "Nenhum dia selecionado"}</p>
-              </div>
+            <div className="grid grid-cols-2 gap-3">
 
-              <div>
-                <p className="font-semibold text-slate-800">Horário</p>
-                <p>{horario || "Nenhum horário selecionado"}</p>
-              </div>
+              {horariosDisponiveis.map((h) => (
 
-              <div>
-                <p className="font-semibold text-slate-800">Paciente</p>
-                <p>{nome || "Nome ainda não preenchido"}</p>
-              </div>
+                <button
+                  key={h}
+                  onClick={() => setHorario(h)}
+                  className={`rounded-2xl border py-3 ${
+                    horario === h
+                      ? "bg-slate-800 text-white"
+                      : "bg-white border-rose-200"
+                  }`}
+                >
+                  {h}
+                </button>
 
-              <div>
-                <p className="font-semibold text-slate-800">E-mail</p>
-                <p>{email || "E-mail ainda não preenchido"}</p>
-              </div>
+              ))}
 
-              <div>
-                <p className="font-semibold text-slate-800">Telefone</p>
-                <p>{telefone || "Telefone ainda não preenchido"}</p>
-              </div>
             </div>
+
           </div>
+
+          {/* DADOS */}
+
+          <div>
+
+            <label className="mb-3 block text-sm font-semibold text-slate-700">
+              4. Dados do paciente
+            </label>
+
+            <div className="space-y-4">
+
+              <input
+                placeholder="Nome completo"
+                value={nome}
+                onChange={(e) => setNome(e.target.value)}
+                className="w-full rounded-2xl border border-rose-200 bg-white px-4 py-4"
+              />
+
+              <input
+                placeholder="CPF"
+                value={cpf}
+                onChange={(e) => setCpf(formatarCPF(e.target.value))}
+                className="w-full rounded-2xl border border-rose-200 bg-white px-4 py-4"
+              />
+
+              <input
+                placeholder="E-mail"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full rounded-2xl border border-rose-200 bg-white px-4 py-4"
+              />
+
+              <input
+                placeholder="Telefone"
+                value={telefone}
+                onChange={(e) => setTelefone(e.target.value)}
+                className="w-full rounded-2xl border border-rose-200 bg-white px-4 py-4"
+              />
+
+            </div>
+
+            <button className="mt-6 w-full rounded-2xl bg-slate-800 py-4 text-white font-semibold">
+              Confirmar agendamento
+            </button>
+
+          </div>
+
         </div>
+
       </section>
+
     </div>
   );
 }
