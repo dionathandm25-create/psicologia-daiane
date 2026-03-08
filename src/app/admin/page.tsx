@@ -63,6 +63,23 @@ export default function AdminPage() {
     window.location.reload();
   }
 
+  async function cancelarAgendamento(id: number) {
+    const supabase = createClient();
+
+    const { error } = await supabase
+      .from("agendamentos")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      alert("Erro ao cancelar consulta.");
+      return;
+    }
+
+    alert("Consulta cancelada com sucesso.");
+    window.location.reload();
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-transparent px-6 py-16">
@@ -123,12 +140,14 @@ export default function AdminPage() {
                 <th className="px-4 py-3">Serviço</th>
                 <th className="px-4 py-3">Data</th>
                 <th className="px-4 py-3">Horário</th>
+                <th className="px-4 py-3">Ação</th>
               </tr>
             </thead>
+
             <tbody>
               {agendamentos.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-6 text-center text-slate-500">
+                  <td colSpan={7} className="px-4 py-6 text-center text-slate-500">
                     Nenhum agendamento encontrado.
                   </td>
                 </tr>
@@ -141,6 +160,14 @@ export default function AdminPage() {
                     <td className="px-4 py-3">{item.servico}</td>
                     <td className="px-4 py-3">{item.data}</td>
                     <td className="px-4 py-3">{item.horario}</td>
+                    <td className="px-4 py-3">
+                      <button
+                        onClick={() => cancelarAgendamento(item.id)}
+                        className="rounded-xl bg-red-500 px-4 py-2 text-white hover:bg-red-600"
+                      >
+                        Cancelar
+                      </button>
+                    </td>
                   </tr>
                 ))
               )}
