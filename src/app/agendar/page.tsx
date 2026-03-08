@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 import { formatarCPF, horariosPorDia, obterDiaSemana } from "@/lib/horarios";
 
 const servicos = [
@@ -79,36 +80,45 @@ export default function AgendarPage() {
     setEnviando(true);
 
     try {
-      const resposta = await fetch("/api/agendar", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          nome,
-          email,
-          telefone,
-          servico,
-          data,
-          horario,
-        }),
-      });
+      const supabase = createClient();
 
-      const json = await resposta.json();
+      const { data: agendamentoCriado, error } = await supabase
+        .from("agendamentos")
+        .insert([
+          {
+            nome,
+            email,
+            telefone,
+            servico,
+            data,
+            horario,
+            payment_status: "pendente",
+          },
+        ])
+        .select()
+        .single();
 
-      if (!resposta.ok) {
-        setMensagem(json.error || "Erro ao salvar agendamento.");
-        if (resposta.status === 409) {
+      if (error) {
+        if (error.code === "23505") {
+          setMensagem("Esse horário já foi ocupado. Escolha outro.");
           setHorario("");
+        } else {
+          setMensagem("Erro ao salvar agendamento.");
         }
         setEnviando(false);
         return;
       }
 
-      setMensagem("Agendamento realizado com sucesso!");
+      localStorage.setItem(
+        "agendamento_daiane",
+        JSON.stringify(agendamentoCriado)
+      );
+
+      setMensagem("Agendamento salvo com sucesso! Indo para pagamento...");
+
       setTimeout(() => {
-        window.location.href = "/confirmacao";
-      }, 1200);
+        window.location.href = "/pagamento";
+      }, 1000);
     } catch {
       setMensagem("Erro de conexão ao salvar o agendamento.");
     } finally {
@@ -299,6 +309,7 @@ export default function AgendarPage() {
                 <p className="font-semibold text-slate-800">Data</p>
                 <p>{data || "Nenhuma data selecionada"}</p>
               </div>
+
               <div>
                 <p className="font-semibold text-slate-800">Dia da semana</p>
                 <p>{diaSemana || "Nenhum dia selecionado"}</p>
