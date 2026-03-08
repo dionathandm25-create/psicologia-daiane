@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 import { formatarCPF, horariosPorDia, obterDiaSemana } from "@/lib/horarios";
 
 const servicos = [
@@ -27,8 +28,6 @@ const servicos = [
 
 export default function AgendarPage() {
   const [servico, setServico] = useState("");
-  const [abrirServicos, setAbrirServicos] = useState(false);
-
   const [data, setData] = useState("");
   const [horario, setHorario] = useState("");
 
@@ -37,6 +36,13 @@ export default function AgendarPage() {
   const [email, setEmail] = useState("");
   const [telefone, setTelefone] = useState("");
 
+  const [mensagem, setMensagem] = useState("");
+  const [enviando, setEnviando] = useState(false);
+  const [horariosOcupados, setHorariosOcupados] = useState<string[]>([]);
+  const [abrirServicos, setAbrirServicos] = useState(false);
+
+  const hoje = new Date().toISOString().split("T")[0];
+
   const diaSemana = useMemo(() => obterDiaSemana(data), [data]);
 
   const horariosDisponiveis = useMemo(() => {
@@ -44,23 +50,126 @@ export default function AgendarPage() {
     return horariosPorDia[diaSemana] || [];
   }, [diaSemana]);
 
-  const servicoSelecionado = servicos.find((item) => item.nome === servico);
+  const servicoSelecionado = servicos.find((s) => s.nome === servico);
+
+  useEffect(() => {
+    async function carregarHorariosOcupados() {
+      if (!data) {
+        setHorariosOcupados([]);
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/horarios-ocupados?data=${data}`);
+        const json = await res.json();
+        setHorariosOcupados(json.horarios || []);
+      } catch {
+        setHorariosOcupados([]);
+      }
+    }
+
+    carregarHorariosOcupados();
+  }, [data]);
+
+  async function salvarAgendamento() {
+    setMensagem("");
+
+    if (!servico) {
+      setMensagem("Selecione um serviço.");
+      return;
+    }
+
+    if (!data) {
+      setMensagem("Selecione uma data.");
+      return;
+    }
+
+    if (data < hoje) {
+      setMensagem("Escolha uma data de hoje em diante.");
+      return;
+    }
+
+    if (!horario) {
+      setMensagem("Selecione um horário.");
+      return;
+    }
+
+    if (!nome.trim()) {
+      setMensagem("Preencha o nome completo.");
+      return;
+    }
+
+    if (!email.trim()) {
+      setMensagem("Preencha o e-mail.");
+      return;
+    }
+
+    setEnviando(true);
+
+    try {
+      const supabase = createClient();
+
+      const { data: agendamentoCriado, error } = await supabase
+        .from("agendamentos")
+        .insert([
+          {
+            nome,
+            email,
+            telefone,
+            servico,
+            data,
+            horario,
+            payment_status: "pendente",
+          },
+        ])
+        .select()
+        .single();
+
+      if (error) {
+        if (error.code === "23505") {
+          setMensagem("Esse horário já foi ocupado. Escolha outro.");
+          setHorario("");
+        } else {
+          setMensagem(`Erro ao salvar agendamento: ${error.message}`);
+        }
+        setEnviando(false);
+        return;
+      }
+
+      localStorage.setItem(
+        "agendamento_daiane",
+        JSON.stringify(agendamentoCriado)
+      );
+
+      if (servicoSelecionado?.valor === null) {
+        setMensagem(
+          "Agendamento salvo. Este serviço está com valor sob consulta. Entre em contato para finalizar."
+        );
+        setEnviando(false);
+        return;
+      }
+
+      setMensagem("Agendamento salvo com sucesso! Indo para pagamento...");
+
+      setTimeout(() => {
+        window.location.href = "/pagamento";
+      }, 800);
+    } catch (e) {
+      setMensagem("Erro de conexão ao salvar o agendamento.");
+    } finally {
+      setEnviando(false);
+    }
+  }
 
   return (
     <div className="min-h-screen bg-transparent px-6 py-16">
-
-      <section className="mx-auto max-w-5xl">
-
-        <h1 className="text-4xl font-bold text-center text-slate-800">
+      <section className="mx-auto max-w-3xl">
+        <h1 className="text-center text-4xl font-bold text-slate-800">
           Agendamento on-line
         </h1>
 
-        <div className="mt-12 rounded-3xl border border-rose-100 bg-rose-50/90 p-8 shadow-lg">
-
-          {/* SERVIÇO */}
-
-          <div className="mb-8">
-
+        <div className="mt-10 rounded-3xl border border-rose-100 bg-rose-50 p-6 shadow-md">
+          <div>
             <label className="mb-3 block text-sm font-semibold text-slate-700">
               1. Escolha o serviço
             </label>
@@ -74,25 +183,27 @@ export default function AgendarPage() {
                 ? `${servicoSelecionado.nome} (${servicoSelecionado.label})`
                 : "Selecione um serviço"}
             </button>
-
           </div>
 
-          {/* MODAL SERVIÇOS */}
-
           {abrirServicos && (
-
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+              <div className="max-h-[80vh] w-full max-w-xl overflow-y-auto rounded-3xl border border-rose-200 bg-rose-50 p-4 shadow-2xl">
+                <div className="mb-4 flex items-center justify-between">
+                  <h3 className="text-xl font-bold text-slate-800">
+                    Selecione um serviço
+                  </h3>
 
-              <div className="max-h-[80vh] w-full max-w-xl overflow-y-auto rounded-3xl bg-rose-50 p-6 shadow-xl">
-
-                <h3 className="mb-4 text-xl font-bold text-slate-800">
-                  Selecione um serviço
-                </h3>
+                  <button
+                    type="button"
+                    onClick={() => setAbrirServicos(false)}
+                    className="rounded-xl px-3 py-2 text-slate-600 hover:bg-rose-100"
+                  >
+                    Fechar
+                  </button>
+                </div>
 
                 <div className="space-y-3">
-
                   {servicos.map((item) => (
-
                     <button
                       key={item.nome}
                       type="button"
@@ -100,137 +211,129 @@ export default function AgendarPage() {
                         setServico(item.nome);
                         setAbrirServicos(false);
                       }}
-                      className={`w-full rounded-2xl border px-4 py-4 text-left ${
+                      className={`w-full rounded-2xl border px-4 py-4 text-left transition ${
                         servico === item.nome
-                          ? "border-rose-400 bg-white"
+                          ? "border-rose-300 bg-white shadow-sm"
                           : "border-rose-200 bg-white hover:bg-rose-100"
                       }`}
                     >
-
-                      <span className="block font-semibold text-slate-800">
+                      <span className="block text-lg font-semibold text-slate-800">
                         {item.nome}
                       </span>
-
-                      <span className="text-sm text-slate-600">
+                      <span className="mt-1 block text-sm text-slate-600">
                         {item.label}
                       </span>
-
                     </button>
-
                   ))}
-
                 </div>
-
-                <button
-                  onClick={() => setAbrirServicos(false)}
-                  className="mt-6 w-full rounded-2xl bg-slate-800 py-3 text-white"
-                >
-                  Fechar
-                </button>
-
               </div>
-
             </div>
-
           )}
 
-          {/* DATA */}
-
-          <div className="mb-8">
-
+          <div className="mt-6">
             <label className="mb-3 block text-sm font-semibold text-slate-700">
               2. Escolha a data
             </label>
 
             <input
               type="date"
+              min={hoje}
               value={data}
-              onChange={(e) => setData(e.target.value)}
-              className="w-full rounded-2xl border border-rose-200 bg-white px-4 py-4"
+              onChange={(e) => {
+                setData(e.target.value);
+                setHorario("");
+                setMensagem("");
+              }}
+              className="w-full rounded-2xl border border-rose-200 bg-white px-4 py-4 text-slate-800"
             />
-
           </div>
 
-          {/* HORÁRIOS */}
-
-          <div className="mb-8">
-
+          <div className="mt-6">
             <label className="mb-3 block text-sm font-semibold text-slate-700">
               3. Escolha o horário
             </label>
 
             <div className="grid grid-cols-2 gap-3">
+              {horariosDisponiveis.map((h) => {
+                const ocupado = horariosOcupados.includes(h);
 
-              {horariosDisponiveis.map((h) => (
-
-                <button
-                  key={h}
-                  onClick={() => setHorario(h)}
-                  className={`rounded-2xl border py-3 ${
-                    horario === h
-                      ? "bg-slate-800 text-white"
-                      : "bg-white border-rose-200"
-                  }`}
-                >
-                  {h}
-                </button>
-
-              ))}
-
+                return (
+                  <button
+                    key={h}
+                    type="button"
+                    disabled={ocupado}
+                    onClick={() => setHorario(h)}
+                    className={`rounded-xl px-4 py-3 ${
+                      ocupado
+                        ? "cursor-not-allowed border border-red-200 bg-red-50 text-red-400"
+                        : horario === h
+                        ? "bg-slate-800 text-white"
+                        : "border border-rose-200 bg-white text-slate-800"
+                    }`}
+                  >
+                    {ocupado ? `${h} • Ocupado` : h}
+                  </button>
+                );
+              })}
             </div>
-
           </div>
 
-          {/* DADOS */}
-
-          <div>
-
+          <div className="mt-6">
             <label className="mb-3 block text-sm font-semibold text-slate-700">
               4. Dados do paciente
             </label>
 
-            <div className="space-y-4">
-
+            <div className="space-y-3">
               <input
+                type="text"
                 placeholder="Nome completo"
                 value={nome}
                 onChange={(e) => setNome(e.target.value)}
-                className="w-full rounded-2xl border border-rose-200 bg-white px-4 py-4"
+                className="w-full rounded-xl border border-rose-200 px-4 py-3"
               />
 
               <input
+                type="text"
                 placeholder="CPF"
                 value={cpf}
                 onChange={(e) => setCpf(formatarCPF(e.target.value))}
-                className="w-full rounded-2xl border border-rose-200 bg-white px-4 py-4"
+                className="w-full rounded-xl border border-rose-200 px-4 py-3"
               />
 
               <input
+                type="email"
                 placeholder="E-mail"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-2xl border border-rose-200 bg-white px-4 py-4"
+                className="w-full rounded-xl border border-rose-200 px-4 py-3"
               />
 
               <input
+                type="text"
                 placeholder="Telefone"
                 value={telefone}
                 onChange={(e) => setTelefone(e.target.value)}
-                className="w-full rounded-2xl border border-rose-200 bg-white px-4 py-4"
+                className="w-full rounded-xl border border-rose-200 px-4 py-3"
               />
-
             </div>
-
-            <button className="mt-6 w-full rounded-2xl bg-slate-800 py-4 text-white font-semibold">
-              Confirmar agendamento
-            </button>
-
           </div>
 
+          {mensagem && (
+            <div className="mt-4 rounded-2xl bg-white px-4 py-3 text-center text-sm text-slate-700">
+              {mensagem}
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={salvarAgendamento}
+            disabled={enviando}
+            className="mt-6 w-full rounded-2xl bg-slate-800 py-4 font-semibold text-white disabled:opacity-60"
+          >
+            {enviando ? "Salvando..." : "Confirmar agendamento"}
+          </button>
         </div>
-
       </section>
-
     </div>
   );
 }
