@@ -38,22 +38,22 @@ export default function AgendarPage() {
   const dataValida = data ? horariosDisponiveis.length > 0 : false;
 
   useEffect(() => {
-    async function carregarHorarios() {
+    async function carregarHorariosOcupados() {
       if (!data) {
         setHorariosOcupados([]);
         return;
       }
 
       try {
-        const res = await fetch(`/api/horarios-ocupados?data=${data}`);
-        const json = await res.json();
+        const resposta = await fetch(`/api/horarios-ocupados?data=${data}`);
+        const json = await resposta.json();
         setHorariosOcupados(json.horarios || []);
       } catch {
         setHorariosOcupados([]);
       }
     }
 
-    carregarHorarios();
+    carregarHorariosOcupados();
   }, [data]);
 
   function limparAgendamento() {
@@ -79,7 +79,7 @@ export default function AgendarPage() {
     setEnviando(true);
 
     try {
-      const res = await fetch("/api/agendar", {
+      const resposta = await fetch("/api/agendar", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -94,11 +94,11 @@ export default function AgendarPage() {
         }),
       });
 
-      const json = await res.json();
+      const json = await resposta.json();
 
-      if (!res.ok) {
+      if (!resposta.ok) {
         setMensagem(json.error || "Erro ao salvar agendamento.");
-        if (res.status === 409) {
+        if (resposta.status === 409) {
           setHorario("");
         }
         setEnviando(false);
@@ -299,7 +299,6 @@ export default function AgendarPage() {
                 <p className="font-semibold text-slate-800">Data</p>
                 <p>{data || "Nenhuma data selecionada"}</p>
               </div>
-
               <div>
                 <p className="font-semibold text-slate-800">Dia da semana</p>
                 <p>{diaSemana || "Nenhum dia selecionado"}</p>
