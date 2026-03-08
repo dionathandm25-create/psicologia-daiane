@@ -198,7 +198,7 @@ export default function AgendarPage() {
         </div>
 
         <div className="mt-12 grid gap-8 lg:grid-cols-3">
-          <div className="rounded-3xl bg-white/90 p-6 shadow-md backdrop-blur-sm lg:col-span-2">
+          <div className="rounded-3xl border border-rose-100 bg-rose-50/80 p-6 shadow-md backdrop-blur-sm lg:col-span-2">
             <div className="space-y-8">
               <div>
                 <label className="mb-3 block text-sm font-semibold text-slate-700">
@@ -208,7 +208,7 @@ export default function AgendarPage() {
                 <select
                   value={servico}
                   onChange={(e) => setServico(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-4 text-slate-800"
+                  className="w-full rounded-2xl border border-rose-200 bg-white px-4 py-4 text-slate-800"
                 >
                   <option value="">Selecione um serviço</option>
                   {servicos.map((item) => (
@@ -232,7 +232,7 @@ export default function AgendarPage() {
                     setHorario("");
                     setMensagem("");
                   }}
-                  className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-4 text-slate-800"
+                  className="w-full rounded-2xl border border-rose-200 bg-white px-4 py-4 text-slate-800"
                 />
 
                 {data && (
@@ -269,7 +269,7 @@ export default function AgendarPage() {
                               ? "cursor-not-allowed border-red-200 bg-red-50 text-red-400"
                               : horario === item
                               ? "border-slate-800 bg-slate-800 text-white"
-                              : "border-slate-300 bg-white text-slate-700 hover:border-slate-500"
+                              : "border-rose-200 bg-white text-slate-700 hover:border-slate-500"
                           }`}
                         >
                           {ocupado ? `${item} • Ocupado` : item}
@@ -278,7 +278,7 @@ export default function AgendarPage() {
                     })}
                   </div>
                 ) : (
-                  <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-4 text-sm text-slate-500">
+                  <div className="rounded-2xl border border-dashed border-rose-200 bg-white p-4 text-sm text-slate-500">
                     Selecione uma data válida para ver os horários disponíveis.
                   </div>
                 )}
@@ -295,7 +295,7 @@ export default function AgendarPage() {
                     placeholder="Nome completo"
                     value={nome}
                     onChange={(e) => setNome(e.target.value)}
-                    className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-4 text-slate-800"
+                    className="w-full rounded-2xl border border-rose-200 bg-white px-4 py-4 text-slate-800"
                   />
 
                   <input
@@ -303,7 +303,7 @@ export default function AgendarPage() {
                     placeholder="CPF (opcional)"
                     value={cpf}
                     onChange={(e) => setCpf(formatarCPF(e.target.value))}
-                    className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-4 text-slate-800"
+                    className="w-full rounded-2xl border border-rose-200 bg-white px-4 py-4 text-slate-800"
                   />
 
                   <input
@@ -311,7 +311,7 @@ export default function AgendarPage() {
                     placeholder="E-mail"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-4 text-slate-800"
+                    className="w-full rounded-2xl border border-rose-200 bg-white px-4 py-4 text-slate-800"
                   />
 
                   <input
@@ -319,13 +319,13 @@ export default function AgendarPage() {
                     placeholder="Telefone"
                     value={telefone}
                     onChange={(e) => setTelefone(e.target.value)}
-                    className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-4 text-slate-800"
+                    className="w-full rounded-2xl border border-rose-200 bg-white px-4 py-4 text-slate-800"
                   />
                 </div>
               </div>
 
               {mensagem && (
-                <div className="rounded-2xl bg-slate-100 px-4 py-3 text-sm text-slate-700">
+                <div className="rounded-2xl bg-white px-4 py-3 text-sm text-slate-700">
                   {mensagem}
                 </div>
               )}
@@ -334,7 +334,7 @@ export default function AgendarPage() {
                 <button
                   type="button"
                   onClick={limparAgendamento}
-                  className="rounded-2xl border border-slate-300 bg-white px-6 py-4 font-semibold text-slate-700 hover:bg-slate-100"
+                  className="rounded-2xl border border-rose-200 bg-white px-6 py-4 font-semibold text-slate-700 hover:bg-rose-50"
                 >
                   Limpar
                 </button>
@@ -351,7 +351,7 @@ export default function AgendarPage() {
             </div>
           </div>
 
-          <div className="rounded-3xl bg-white/90 p-6 shadow-md backdrop-blur-sm">
+          <div className="rounded-3xl border border-rose-100 bg-rose-50/80 p-6 shadow-md backdrop-blur-sm">
             <h2 className="text-xl font-bold text-slate-800">
               Resumo do agendamento
             </h2>
