@@ -35,6 +35,11 @@ export async function POST(req: Request) {
               unit_price: 280,
             },
           ],
+          payment_methods: {
+            excluded_payment_types: [],
+            excluded_payment_methods: [],
+            installments: 1,
+          },
           external_reference: String(agendamentoId),
           back_urls: {
             success: "https://psicologia-daiane.vercel.app/confirmacao",
