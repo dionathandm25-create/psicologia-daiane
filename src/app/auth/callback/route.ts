@@ -8,7 +8,18 @@ export async function GET(request: Request) {
 
   if (code) {
     const supabase = await createClient();
-    await supabase.auth.exchangeCodeForSession(code);
+
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
+
+    if (error) {
+      console.error("ERRO AO CRIAR SESSÃO DO GOOGLE:", error);
+
+      return NextResponse.redirect(
+        `${origin}/admin?erro=login`
+      );
+    }
+
+    console.log("LOGIN GOOGLE REALIZADO COM SUCESSO");
   }
 
   return NextResponse.redirect(`${origin}/admin`);
