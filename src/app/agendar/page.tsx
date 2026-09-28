@@ -1,30 +1,91 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { formatarCPF, horariosPorDia, obterDiaSemana } from "@/lib/horarios";
 
 const servicos = [
   { nome: "Consulta inicial", valor: 280, label: "R$280,00" },
   { nome: "Consulta sessão", valor: 280, label: "R$280,00" },
-  { nome: "Pacote com 10 ou mais sessões", valor: 210, label: "R$210,00 cada sessão" },
+  {
+    nome: "Pacote com 10 ou mais sessões",
+    valor: 210,
+    label: "R$210,00 cada sessão",
+  },
   {
     nome: "Avaliação psicológica para cirurgias bariátricas, vasectomia entre outras cirurgias",
     valor: null,
     label: "Consulte valores",
   },
-  { nome: "Avaliação neuropsicológica - TDAH", valor: 1050, label: "R$1050,00" },
-  { nome: "Avaliação neuropsicológica - TEA", valor: 1050, label: "R$1050,00" },
-  { nome: "Avaliação neuropsicológica - QI", valor: 1050, label: "R$1050,00" },
-  { nome: "Laudos neuropsicológicos", valor: 1050, label: "R$1050,00" },
-  { nome: "Aplicação ABA", valor: 280, label: "R$280,00" },
-  { nome: "Pacote com 10 ou mais sessões ABA", valor: 210, label: "R$210,00 cada sessão" },
+  {
+    nome: "Avaliação neuropsicológica - TDAH",
+    valor: 1050,
+    label: "R$1050,00",
+  },
+  {
+    nome: "Avaliação neuropsicológica - TEA",
+    valor: 1050,
+    label: "R$1050,00",
+  },
+  {
+    nome: "Avaliação neuropsicológica - QI",
+    valor: 1050,
+    label: "R$1050,00",
+  },
+  {
+    nome: "Laudos neuropsicológicos",
+    valor: 1050,
+    label: "R$1050,00",
+  },
+  {
+    nome: "Aplicação ABA",
+    valor: 280,
+    label: "R$280,00",
+  },
+  {
+    nome: "Pacote com 10 ou mais sessões ABA",
+    valor: 210,
+    label: "R$210,00 cada sessão",
+  },
   {
     nome: "Laudos de cirurgia bariátrica, vasectomia e entre outras cirurgias",
     valor: 750,
     label: "R$750,00",
   },
 ];
+
+function obterHojeLocal() {
+  const agora = new Date();
+
+  const ano = agora.getFullYear();
+  const mes = String(agora.getMonth() + 1).padStart(2, "0");
+  const dia = String(agora.getDate()).padStart(2, "0");
+
+  return `${ano}-${mes}-${dia}`;
+}
+
+function dataValida(data: string) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(data)) {
+    return false;
+  }
+
+  const [ano, mes, dia] = data.split("-").map(Number);
+
+  if (!ano || !mes || !dia) {
+    return false;
+  }
+
+  const dataObjeto = new Date(
+    ano,
+    mes - 1,
+    dia
+  );
+
+  return (
+    dataObjeto.getFullYear() === ano &&
+    dataObjeto.getMonth() === mes - 1 &&
+    dataObjeto.getDate() === dia
+  );
+}
 
 export default function AgendarPage() {
   const [servico, setServico] = useState("");
@@ -38,32 +99,70 @@ export default function AgendarPage() {
 
   const [mensagem, setMensagem] = useState("");
   const [enviando, setEnviando] = useState(false);
-  const [horariosOcupados, setHorariosOcupados] = useState<string[]>([]);
-  const [abrirServicos, setAbrirServicos] = useState(false);
 
-  const hoje = new Date().toISOString().split("T")[0];
+  const [horariosOcupados, setHorariosOcupados] =
+    useState<string[]>([]);
 
-  const diaSemana = useMemo(() => obterDiaSemana(data), [data]);
+  const [abrirServicos, setAbrirServicos] =
+    useState(false);
+
+  const hoje = useMemo(() => obterHojeLocal(), []);
+
+  const diaSemana = useMemo(() => {
+    if (!dataValida(data)) {
+      return "";
+    }
+
+    return obterDiaSemana(data);
+  }, [data]);
 
   const horariosDisponiveis = useMemo(() => {
-    if (!diaSemana) return [];
+    if (!diaSemana) {
+      return [];
+    }
+
     return horariosPorDia[diaSemana] || [];
   }, [diaSemana]);
 
-  const servicoSelecionado = servicos.find((s) => s.nome === servico);
+  const servicoSelecionado = servicos.find(
+    (s) => s.nome === servico
+  );
 
   useEffect(() => {
     async function carregarHorariosOcupados() {
-      if (!data) {
+      if (!dataValida(data)) {
         setHorariosOcupados([]);
         return;
       }
 
       try {
-        const res = await fetch(`/api/horarios-ocupados?data=${data}`);
+        const res = await fetch(
+          `/api/horarios-ocupados?data=${encodeURIComponent(
+            data
+          )}`,
+          {
+            cache: "no-store",
+          }
+        );
+
         const json = await res.json();
-        setHorariosOcupados(json.horarios || []);
-      } catch {
+
+        if (!res.ok) {
+          setHorariosOcupados([]);
+          return;
+        }
+
+        setHorariosOcupados(
+          Array.isArray(json.horarios)
+            ? json.horarios
+            : []
+        );
+      } catch (error) {
+        console.error(
+          "ERRO AO CARREGAR HORÁRIOS OCUPADOS:",
+          error
+        );
+
         setHorariosOcupados([]);
       }
     }
@@ -84,8 +183,17 @@ export default function AgendarPage() {
       return;
     }
 
+    if (!dataValida(data)) {
+      setMensagem(
+        "A data selecionada é inválida. Escolha uma data válida."
+      );
+      return;
+    }
+
     if (data < hoje) {
-      setMensagem("Escolha uma data de hoje em diante.");
+      setMensagem(
+        "Escolha uma data de hoje em diante."
+      );
       return;
     }
 
@@ -107,56 +215,89 @@ export default function AgendarPage() {
     setEnviando(true);
 
     try {
-      const supabase = createClient();
+      const resposta = await fetch("/api/agendar", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          nome: nome.trim(),
+          cpf: cpf.trim(),
+          email: email.trim().toLowerCase(),
+          telefone: telefone.trim(),
+          servico,
+          data,
+          horario,
+        }),
+      });
 
-      const { data: agendamentoCriado, error } = await supabase
-        .from("agendamentos")
-        .insert([
-          {
-            nome,
-            email,
-            telefone,
-            servico,
-            data,
-            horario,
-            payment_status: "pendente",
-          },
-        ])
-        .select()
-        .single();
+      const resultado = await resposta.json();
 
-      if (error) {
-        if (error.code === "23505") {
-          setMensagem("Esse horário já foi ocupado. Escolha outro.");
+      if (!resposta.ok) {
+        if (resposta.status === 409) {
+          setMensagem(
+            resultado?.error ||
+              "Esse horário já foi ocupado. Escolha outro."
+          );
+
           setHorario("");
         } else {
-          setMensagem(`Erro ao salvar agendamento: ${error.message}`);
+          setMensagem(
+            resultado?.error ||
+              "Não foi possível salvar o agendamento."
+          );
         }
+
         setEnviando(false);
         return;
       }
 
+      const agendamentoParaPagamento = {
+        id: resultado.agendamento_id,
+        paciente_id: resultado.paciente_id,
+        nome: nome.trim(),
+        cpf: cpf.trim(),
+        email: email.trim().toLowerCase(),
+        telefone: telefone.trim(),
+        servico,
+        data,
+        horario,
+        payment_status: "pendente",
+      };
+
       localStorage.setItem(
         "agendamento_daiane",
-        JSON.stringify(agendamentoCriado)
+        JSON.stringify(
+          agendamentoParaPagamento
+        )
       );
 
       if (servicoSelecionado?.valor === null) {
         setMensagem(
           "Agendamento salvo. Este serviço está com valor sob consulta. Entre em contato para finalizar."
         );
+
         setEnviando(false);
         return;
       }
 
-      setMensagem("Agendamento salvo com sucesso! Indo para pagamento...");
+      setMensagem(
+        "Agendamento salvo com sucesso! Indo para pagamento..."
+      );
 
       setTimeout(() => {
         window.location.href = "/pagamento";
       }, 800);
-    } catch (e) {
-      setMensagem("Erro de conexão ao salvar o agendamento.");
-    } finally {
+    } catch (error) {
+      console.error(
+        "ERRO AO ENVIAR AGENDAMENTO:",
+        error
+      );
+
+      setMensagem(
+        "Erro de conexão ao salvar o agendamento."
+      );
+
       setEnviando(false);
     }
   }
@@ -176,7 +317,9 @@ export default function AgendarPage() {
 
             <button
               type="button"
-              onClick={() => setAbrirServicos(true)}
+              onClick={() =>
+                setAbrirServicos(true)
+              }
               className="w-full rounded-2xl border border-rose-200 bg-white px-4 py-4 text-left text-slate-800"
             >
               {servicoSelecionado
@@ -195,7 +338,9 @@ export default function AgendarPage() {
 
                   <button
                     type="button"
-                    onClick={() => setAbrirServicos(false)}
+                    onClick={() =>
+                      setAbrirServicos(false)
+                    }
                     className="rounded-xl px-3 py-2 text-slate-600 hover:bg-rose-100"
                   >
                     Fechar
@@ -220,6 +365,7 @@ export default function AgendarPage() {
                       <span className="block text-lg font-semibold text-slate-800">
                         {item.nome}
                       </span>
+
                       <span className="mt-1 block text-sm text-slate-600">
                         {item.label}
                       </span>
@@ -240,7 +386,22 @@ export default function AgendarPage() {
               min={hoje}
               value={data}
               onChange={(e) => {
-                setData(e.target.value);
+                const novaData = e.target.value;
+
+                if (
+                  novaData &&
+                  !dataValida(novaData)
+                ) {
+                  setData("");
+                  setHorario("");
+                  setHorariosOcupados([]);
+                  setMensagem(
+                    "Escolha uma data válida."
+                  );
+                  return;
+                }
+
+                setData(novaData);
                 setHorario("");
                 setMensagem("");
               }}
@@ -253,29 +414,46 @@ export default function AgendarPage() {
               3. Escolha o horário
             </label>
 
-            <div className="grid grid-cols-2 gap-3">
-              {horariosDisponiveis.map((h) => {
-                const ocupado = horariosOcupados.includes(h);
+            {!data ? (
+              <p className="rounded-xl bg-white px-4 py-3 text-sm text-slate-500">
+                Selecione uma data para visualizar os horários.
+              </p>
+            ) : !dataValida(data) ? (
+              <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
+                A data selecionada é inválida.
+              </p>
+            ) : horariosDisponiveis.length === 0 ? (
+              <p className="rounded-xl bg-white px-4 py-3 text-sm text-slate-500">
+                Não há horários disponíveis para este dia.
+              </p>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                {horariosDisponiveis.map((h) => {
+                  const ocupado =
+                    horariosOcupados.includes(h);
 
-                return (
-                  <button
-                    key={h}
-                    type="button"
-                    disabled={ocupado}
-                    onClick={() => setHorario(h)}
-                    className={`rounded-xl px-4 py-3 ${
-                      ocupado
-                        ? "cursor-not-allowed border border-red-200 bg-red-50 text-red-400"
-                        : horario === h
-                        ? "bg-slate-800 text-white"
-                        : "border border-rose-200 bg-white text-slate-800"
-                    }`}
-                  >
-                    {ocupado ? `${h} • Ocupado` : h}
-                  </button>
-                );
-              })}
-            </div>
+                  return (
+                    <button
+                      key={h}
+                      type="button"
+                      disabled={ocupado}
+                      onClick={() => setHorario(h)}
+                      className={`rounded-xl px-4 py-3 ${
+                        ocupado
+                          ? "cursor-not-allowed border border-red-200 bg-red-50 text-red-400"
+                          : horario === h
+                          ? "bg-slate-800 text-white"
+                          : "border border-rose-200 bg-white text-slate-800"
+                      }`}
+                    >
+                      {ocupado
+                        ? `${h} • Ocupado`
+                        : h}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           <div className="mt-6">
@@ -288,7 +466,9 @@ export default function AgendarPage() {
                 type="text"
                 placeholder="Nome completo"
                 value={nome}
-                onChange={(e) => setNome(e.target.value)}
+                onChange={(e) =>
+                  setNome(e.target.value)
+                }
                 className="w-full rounded-xl border border-rose-200 px-4 py-3"
               />
 
@@ -296,7 +476,11 @@ export default function AgendarPage() {
                 type="text"
                 placeholder="CPF"
                 value={cpf}
-                onChange={(e) => setCpf(formatarCPF(e.target.value))}
+                onChange={(e) =>
+                  setCpf(
+                    formatarCPF(e.target.value)
+                  )
+                }
                 className="w-full rounded-xl border border-rose-200 px-4 py-3"
               />
 
@@ -304,7 +488,9 @@ export default function AgendarPage() {
                 type="email"
                 placeholder="E-mail"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) =>
+                  setEmail(e.target.value)
+                }
                 className="w-full rounded-xl border border-rose-200 px-4 py-3"
               />
 
@@ -312,7 +498,9 @@ export default function AgendarPage() {
                 type="text"
                 placeholder="Telefone"
                 value={telefone}
-                onChange={(e) => setTelefone(e.target.value)}
+                onChange={(e) =>
+                  setTelefone(e.target.value)
+                }
                 className="w-full rounded-xl border border-rose-200 px-4 py-3"
               />
             </div>
@@ -330,7 +518,9 @@ export default function AgendarPage() {
             disabled={enviando}
             className="mt-6 w-full rounded-2xl bg-slate-800 py-4 font-semibold text-white disabled:opacity-60"
           >
-            {enviando ? "Salvando..." : "Confirmar agendamento"}
+            {enviando
+              ? "Salvando..."
+              : "Confirmar agendamento"}
           </button>
         </div>
       </section>
