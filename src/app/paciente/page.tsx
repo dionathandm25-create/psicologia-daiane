@@ -127,7 +127,7 @@ export default function PacientePage() {
     paciente.nome;
 
   return (
-    <main className="min-h-screen bg-slate-100 px-6 py-10">
+    <main className="min-h-screen bg-transparent px-6 py-10">
       <section className="mx-auto max-w-4xl">
         <div className="rounded-3xl bg-white p-8 shadow-xl">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
