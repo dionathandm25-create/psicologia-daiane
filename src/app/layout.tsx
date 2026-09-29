@@ -7,6 +7,9 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Dra. Daiane Damasceno",
   description: "Psicóloga Clínica | Neuropsicologia",
+  icons: {
+    icon: "/logo-daiane.png",
+  },
 };
 
 export default function RootLayout({
