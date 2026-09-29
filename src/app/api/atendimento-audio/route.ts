@@ -1,9 +1,9 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 
 const EMAIL_ADMIN =
-  "contatocomercial.dionathandev@gmail.com";
+  "psi.daianedamasceno@gmail.com";
 
 const BUCKET_AUDIO =
   "audios-atendimento";
@@ -17,7 +17,7 @@ function criarAdminClient() {
 
   if (!url || !serviceRoleKey) {
     throw new Error(
-      "Configuração do Supabase no servidor não encontrada."
+      "ConfiguraÃ§Ã£o do Supabase no servidor nÃ£o encontrada."
     );
   }
 
@@ -55,11 +55,11 @@ async function verificarAdmin() {
 }
 
 /**
- * LISTAR TODOS OS ÁUDIOS DO ATENDIMENTO
+ * LISTAR TODOS OS ÃUDIOS DO ATENDIMENTO
  *
  * O bucket continua privado.
- * Para tocar o áudio no navegador,
- * geramos uma URL assinada temporária.
+ * Para tocar o Ã¡udio no navegador,
+ * geramos uma URL assinada temporÃ¡ria.
  */
 export async function GET(
   request: Request
@@ -68,7 +68,7 @@ export async function GET(
     if (!(await verificarAdmin())) {
       return NextResponse.json(
         {
-          error: "Não autorizado.",
+          error: "NÃ£o autorizado.",
         },
         {
           status: 401,
@@ -95,7 +95,7 @@ export async function GET(
       return NextResponse.json(
         {
           error:
-            "ID do atendimento inválido.",
+            "ID do atendimento invÃ¡lido.",
         },
         {
           status: 400,
@@ -126,7 +126,7 @@ export async function GET(
       return NextResponse.json(
         {
           error:
-            "Atendimento não encontrado.",
+            "Atendimento nÃ£o encontrado.",
         },
         {
           status: 404,
@@ -135,7 +135,7 @@ export async function GET(
     }
 
     /*
-     * Busca TODOS os áudios vinculados
+     * Busca TODOS os Ã¡udios vinculados
      * exclusivamente a este atendimento.
      */
     const {
@@ -166,14 +166,14 @@ export async function GET(
 
     if (audiosError) {
       console.error(
-        "ERRO AO BUSCAR ÁUDIOS:",
+        "ERRO AO BUSCAR ÃUDIOS:",
         audiosError
       );
 
       return NextResponse.json(
         {
           error:
-            "Não foi possível carregar os áudios.",
+            "NÃ£o foi possÃ­vel carregar os Ã¡udios.",
         },
         {
           status: 500,
@@ -182,8 +182,8 @@ export async function GET(
     }
 
     /*
-     * Para cada áudio privado,
-     * criamos uma URL temporária.
+     * Para cada Ã¡udio privado,
+     * criamos uma URL temporÃ¡ria.
      *
      * 1 hora de validade.
      */
@@ -210,7 +210,7 @@ export async function GET(
               signedUrlError
             ) {
               console.error(
-                "ERRO AO GERAR URL DO ÁUDIO:",
+                "ERRO AO GERAR URL DO ÃUDIO:",
                 signedUrlError
               );
             }
@@ -232,14 +232,14 @@ export async function GET(
     });
   } catch (error) {
     console.error(
-      "ERRO GET ÁUDIOS:",
+      "ERRO GET ÃUDIOS:",
       error
     );
 
     return NextResponse.json(
       {
         error:
-          "Erro interno ao carregar os áudios.",
+          "Erro interno ao carregar os Ã¡udios.",
       },
       {
         status: 500,
@@ -249,7 +249,7 @@ export async function GET(
 }
 
 /**
- * ENVIAR NOVO ÁUDIO
+ * ENVIAR NOVO ÃUDIO
  */
 export async function POST(
   request: Request
@@ -258,7 +258,7 @@ export async function POST(
     if (!(await verificarAdmin())) {
       return NextResponse.json(
         {
-          error: "Não autorizado.",
+          error: "NÃ£o autorizado.",
         },
         {
           status: 401,
@@ -301,7 +301,7 @@ export async function POST(
       return NextResponse.json(
         {
           error:
-            "ID do atendimento inválido.",
+            "ID do atendimento invÃ¡lido.",
         },
         {
           status: 400,
@@ -315,7 +315,7 @@ export async function POST(
       return NextResponse.json(
         {
           error:
-            "Nenhum arquivo de áudio foi enviado.",
+            "Nenhum arquivo de Ã¡udio foi enviado.",
         },
         {
           status: 400,
@@ -327,7 +327,7 @@ export async function POST(
       return NextResponse.json(
         {
           error:
-            "O arquivo de áudio está vazio.",
+            "O arquivo de Ã¡udio estÃ¡ vazio.",
         },
         {
           status: 400,
@@ -345,7 +345,7 @@ export async function POST(
       return NextResponse.json(
         {
           error:
-            "O arquivo de áudio ultrapassa o limite de 50 MB.",
+            "O arquivo de Ã¡udio ultrapassa o limite de 50 MB.",
         },
         {
           status: 400,
@@ -366,7 +366,7 @@ export async function POST(
       return NextResponse.json(
         {
           error:
-            "Duração do áudio inválida.",
+            "DuraÃ§Ã£o do Ã¡udio invÃ¡lida.",
         },
         {
           status: 400,
@@ -397,7 +397,7 @@ export async function POST(
       return NextResponse.json(
         {
           error:
-            "Atendimento não encontrado.",
+            "Atendimento nÃ£o encontrado.",
         },
         {
           status: 404,
@@ -461,14 +461,14 @@ export async function POST(
 
     if (uploadError) {
       console.error(
-        "ERRO AO ENVIAR ÁUDIO PARA O STORAGE:",
+        "ERRO AO ENVIAR ÃUDIO PARA O STORAGE:",
         uploadError
       );
 
       return NextResponse.json(
         {
           error:
-            "Não foi possível armazenar o áudio.",
+            "NÃ£o foi possÃ­vel armazenar o Ã¡udio.",
         },
         {
           status: 500,
@@ -477,7 +477,7 @@ export async function POST(
     }
 
     /*
-     * Registra o áudio no banco.
+     * Registra o Ã¡udio no banco.
      */
     const {
       data: registroAudio,
@@ -513,7 +513,7 @@ export async function POST(
 
     if (registroError) {
       console.error(
-        "ERRO AO REGISTRAR ÁUDIO:",
+        "ERRO AO REGISTRAR ÃUDIO:",
         registroError
       );
 
@@ -531,7 +531,7 @@ export async function POST(
       return NextResponse.json(
         {
           error:
-            "O áudio foi enviado, mas não foi possível registrar os dados.",
+            "O Ã¡udio foi enviado, mas nÃ£o foi possÃ­vel registrar os dados.",
         },
         {
           status: 500,
@@ -540,8 +540,8 @@ export async function POST(
     }
 
     /*
-     * Já devolvemos uma URL temporária
-     * para o áudio recém-criado.
+     * JÃ¡ devolvemos uma URL temporÃ¡ria
+     * para o Ã¡udio recÃ©m-criado.
      */
     const {
       data:
@@ -571,14 +571,14 @@ export async function POST(
     );
   } catch (error) {
     console.error(
-      "ERRO POST ÁUDIO:",
+      "ERRO POST ÃUDIO:",
       error
     );
 
     return NextResponse.json(
       {
         error:
-          "Erro interno ao enviar o áudio.",
+          "Erro interno ao enviar o Ã¡udio.",
       },
       {
         status: 500,
@@ -588,7 +588,7 @@ export async function POST(
 }
 
 /**
- * EDITAR A TRANSCRIÇÃO REVISADA
+ * EDITAR A TRANSCRIÃ‡ÃƒO REVISADA
  */
 export async function PUT(
   request: Request
@@ -597,7 +597,7 @@ export async function PUT(
     if (!(await verificarAdmin())) {
       return NextResponse.json(
         {
-          error: "Não autorizado.",
+          error: "NÃ£o autorizado.",
         },
         {
           status: 401,
@@ -631,7 +631,7 @@ export async function PUT(
       return NextResponse.json(
         {
           error:
-            "ID do atendimento inválido.",
+            "ID do atendimento invÃ¡lido.",
         },
         {
           status: 400,
@@ -648,7 +648,7 @@ export async function PUT(
       return NextResponse.json(
         {
           error:
-            "ID do áudio inválido.",
+            "ID do Ã¡udio invÃ¡lido.",
         },
         {
           status: 400,
@@ -660,7 +660,7 @@ export async function PUT(
       return NextResponse.json(
         {
           error:
-            "A transcrição revisada não pode ficar vazia.",
+            "A transcriÃ§Ã£o revisada nÃ£o pode ficar vazia.",
         },
         {
           status: 400,
@@ -672,7 +672,7 @@ export async function PUT(
       criarAdminClient();
 
     /*
-     * O áudio precisa pertencer
+     * O Ã¡udio precisa pertencer
      * exatamente ao atendimento informado.
      */
     const {
@@ -703,7 +703,7 @@ export async function PUT(
       return NextResponse.json(
         {
           error:
-            "Áudio não encontrado para este atendimento.",
+            "Ãudio nÃ£o encontrado para este atendimento.",
         },
         {
           status: 404,
@@ -750,14 +750,14 @@ export async function PUT(
 
     if (updateError) {
       console.error(
-        "ERRO AO SALVAR TRANSCRIÇÃO EDITADA:",
+        "ERRO AO SALVAR TRANSCRIÃ‡ÃƒO EDITADA:",
         updateError
       );
 
       return NextResponse.json(
         {
           error:
-            "Não foi possível salvar a transcrição revisada.",
+            "NÃ£o foi possÃ­vel salvar a transcriÃ§Ã£o revisada.",
         },
         {
           status: 500,
@@ -772,14 +772,14 @@ export async function PUT(
     });
   } catch (error) {
     console.error(
-      "ERRO PUT ÁUDIO:",
+      "ERRO PUT ÃUDIO:",
       error
     );
 
     return NextResponse.json(
       {
         error:
-          "Erro interno ao salvar a transcrição revisada.",
+          "Erro interno ao salvar a transcriÃ§Ã£o revisada.",
       },
       {
         status: 500,
@@ -787,3 +787,4 @@ export async function PUT(
     );
   }
 }
+

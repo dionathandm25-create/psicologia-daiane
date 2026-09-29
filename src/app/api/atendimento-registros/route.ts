@@ -1,8 +1,8 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 
-const EMAIL_ADMIN = "contatocomercial.dionathandev@gmail.com";
+const EMAIL_ADMIN = "psi.daianedamasceno@gmail.com";
 
 const TIPOS_REGISTRO = [
   "anotacao",
@@ -21,7 +21,7 @@ function criarAdminClient() {
 
   if (!url || !serviceRoleKey) {
     throw new Error(
-      "Configuração do Supabase no servidor não encontrada."
+      "ConfiguraÃ§Ã£o do Supabase no servidor nÃ£o encontrada."
     );
   }
 
@@ -63,7 +63,7 @@ export async function GET(request: Request) {
   try {
     if (!(await verificarAdmin())) {
       return NextResponse.json(
-        { error: "Não autorizado." },
+        { error: "NÃ£o autorizado." },
         { status: 401 }
       );
     }
@@ -79,7 +79,7 @@ export async function GET(request: Request) {
       atendimentoId <= 0
     ) {
       return NextResponse.json(
-        { error: "ID do atendimento inválido." },
+        { error: "ID do atendimento invÃ¡lido." },
         { status: 400 }
       );
     }
@@ -105,7 +105,7 @@ export async function GET(request: Request) {
       return NextResponse.json(
         {
           error:
-            "Não foi possível carregar os registros.",
+            "NÃ£o foi possÃ­vel carregar os registros.",
         },
         { status: 500 }
       );
@@ -134,7 +134,7 @@ export async function POST(request: Request) {
   try {
     if (!(await verificarAdmin())) {
       return NextResponse.json(
-        { error: "Não autorizado." },
+        { error: "NÃ£o autorizado." },
         { status: 401 }
       );
     }
@@ -159,7 +159,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           error:
-            "ID do atendimento inválido.",
+            "ID do atendimento invÃ¡lido.",
         },
         { status: 400 }
       );
@@ -169,7 +169,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           error:
-            "Tipo de registro inválido.",
+            "Tipo de registro invÃ¡lido.",
         },
         { status: 400 }
       );
@@ -179,7 +179,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           error:
-            "O conteúdo do registro não pode ficar vazio.",
+            "O conteÃºdo do registro nÃ£o pode ficar vazio.",
         },
         { status: 400 }
       );
@@ -203,7 +203,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           error:
-            "Atendimento não encontrado.",
+            "Atendimento nÃ£o encontrado.",
         },
         { status: 404 }
       );
@@ -230,7 +230,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           error:
-            "Não foi possível salvar o registro.",
+            "NÃ£o foi possÃ­vel salvar o registro.",
         },
         { status: 500 }
       );
@@ -260,7 +260,7 @@ export async function PUT(request: Request) {
   try {
     if (!(await verificarAdmin())) {
       return NextResponse.json(
-        { error: "Não autorizado." },
+        { error: "NÃ£o autorizado." },
         { status: 401 }
       );
     }
@@ -281,7 +281,7 @@ export async function PUT(request: Request) {
       return NextResponse.json(
         {
           error:
-            "ID do registro inválido.",
+            "ID do registro invÃ¡lido.",
         },
         { status: 400 }
       );
@@ -291,7 +291,7 @@ export async function PUT(request: Request) {
       return NextResponse.json(
         {
           error:
-            "O conteúdo do registro não pode ficar vazio.",
+            "O conteÃºdo do registro nÃ£o pode ficar vazio.",
         },
         { status: 400 }
       );
@@ -320,7 +320,7 @@ export async function PUT(request: Request) {
         return NextResponse.json(
           {
             error:
-              "Registro não encontrado.",
+              "Registro nÃ£o encontrado.",
           },
           { status: 404 }
         );
@@ -329,7 +329,7 @@ export async function PUT(request: Request) {
       return NextResponse.json(
         {
           error:
-            "Não foi possível editar o registro.",
+            "NÃ£o foi possÃ­vel editar o registro.",
         },
         { status: 500 }
       );
@@ -358,7 +358,7 @@ export async function DELETE(request: Request) {
   try {
     if (!(await verificarAdmin())) {
       return NextResponse.json(
-        { error: "Não autorizado." },
+        { error: "NÃ£o autorizado." },
         { status: 401 }
       );
     }
@@ -374,7 +374,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json(
         {
           error:
-            "ID do registro inválido.",
+            "ID do registro invÃ¡lido.",
         },
         { status: 400 }
       );
@@ -396,7 +396,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json(
         {
           error:
-            "Não foi possível excluir o registro.",
+            "NÃ£o foi possÃ­vel excluir o registro.",
         },
         { status: 500 }
       );
@@ -420,3 +420,4 @@ export async function DELETE(request: Request) {
     );
   }
 }
+

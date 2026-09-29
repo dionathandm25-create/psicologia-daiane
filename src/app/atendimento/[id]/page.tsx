@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   useEffect,
@@ -10,7 +10,7 @@ import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 const EMAIL_ADMIN =
-  "contatocomercial.dionathandev@gmail.com";
+  "psi.daianedamasceno@gmail.com";
 
 const TIPOS_REGISTRO = [
   {
@@ -2465,3 +2465,5 @@ export default function AtendimentoPage() {
     </div>
   );
 }
+
+

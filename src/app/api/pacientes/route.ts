@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 
-const EMAIL_ADMIN = "contatocomercial.dionathandev@gmail.com";
+const EMAIL_ADMIN = "psi.daianedamasceno@gmail.com";
 
 function criarAdminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
