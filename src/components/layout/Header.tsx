@@ -24,6 +24,7 @@ export default function Header() {
           <Link href="/servicos">Serviços</Link>
           <Link href="/agendar">Agendar</Link>
           <Link href="/contato">Contato</Link>
+          <Link href="/login">Entrar</Link>
         </nav>
       </div>
     </header>
