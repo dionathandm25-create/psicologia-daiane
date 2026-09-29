@@ -9,9 +9,17 @@ const EMAIL_ADMIN =
 const BUCKET_AUDIO =
   "audios-atendimento";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+function criarOpenAI() {
+  const apiKey = process.env.OPENAI_API_KEY;
+
+  if (!apiKey) {
+    return null;
+  }
+
+  return new OpenAI({
+    apiKey,
+  });
+}
 
 function criarAdminClient() {
   const url =
@@ -266,6 +274,42 @@ export async function POST(
             "audio/webm",
         }
       );
+
+    const openai =
+      criarOpenAI();
+
+    if (!openai) {
+      console.error(
+        "OPENAI_API_KEY não configurada."
+      );
+
+      await supabase
+        .from(
+          "atendimento_audios"
+        )
+        .update({
+          status:
+            "enviado",
+        })
+        .eq(
+          "id",
+          audioId
+        )
+        .eq(
+          "atendimento_id",
+          atendimentoId
+        );
+
+      return NextResponse.json(
+        {
+          error:
+            "Não foi possível concluir a transcrição no momento. O áudio continua salvo com segurança e poderá ser transcrito posteriormente.",
+        },
+        {
+          status: 503,
+        }
+      );
+    }
 
     let resultado;
 
