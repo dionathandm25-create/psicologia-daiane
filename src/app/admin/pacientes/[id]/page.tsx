@@ -62,7 +62,7 @@ type Paciente = {
 };
 
 const EMAIL_ADMIN =
-  "contatocomercial.dionathandev@gmail.com";
+  "psi.daianedamasceno@gmail.com";
 
 function formatarData(data: string | null) {
   if (!data) return "Não informado";
