@@ -19,8 +19,7 @@ type Paciente = {
   ultimo_atendimento: string | null;
 };
 
-const EMAIL_ADMIN =
-  "contatocomercial.dionathandev@gmail.com";
+const EMAIL_ADMIN = "psi.daianedamasceno@gmail.com";
 
 function formatarData(data: string | null) {
   if (!data) return "Nenhum atendimento";
@@ -38,13 +37,13 @@ export default function PacientesPage() {
   const router = useRouter();
 
   const [loading, setLoading] = useState(true);
+
   const [carregandoPacientes, setCarregandoPacientes] =
     useState(false);
 
   const [logado, setLogado] = useState(false);
 
-  const [emailUsuario, setEmailUsuario] =
-    useState("");
+  const [emailUsuario, setEmailUsuario] = useState("");
 
   const [pacientes, setPacientes] =
     useState<Paciente[]>([]);
@@ -142,6 +141,7 @@ export default function PacientesPage() {
         }
 
         setLogado(true);
+
         setEmailUsuario(
           session.user.email || ""
         );
@@ -230,6 +230,7 @@ export default function PacientesPage() {
     <div className="min-h-screen bg-transparent px-6 py-10">
       <div className="mx-auto max-w-7xl">
         {/* CABEÇALHO */}
+
         <div className="rounded-3xl bg-white/90 p-8 shadow-md">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -268,6 +269,7 @@ export default function PacientesPage() {
           </div>
 
           {/* BUSCA */}
+
           <div className="mt-8 rounded-2xl border border-slate-200 bg-slate-50 p-5">
             <label
               htmlFor="busca"
@@ -314,6 +316,7 @@ export default function PacientesPage() {
         </div>
 
         {/* RESUMO */}
+
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <div className="rounded-3xl bg-white/90 p-6 shadow-md">
             <p className="text-sm font-semibold text-slate-500">
@@ -357,6 +360,7 @@ export default function PacientesPage() {
         </div>
 
         {/* LISTA */}
+
         <div className="mt-6 overflow-hidden rounded-3xl bg-white/90 shadow-md">
           <div className="border-b border-slate-200 px-6 py-5">
             <h2 className="text-xl font-bold text-slate-800">
