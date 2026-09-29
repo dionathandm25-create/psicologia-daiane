@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   title: "Dra. Daiane Damasceno",
   description: "Psicóloga Clínica | Neuropsicologia",
   icons: {
-    icon: "/logo-daiane.png",
+    icon: "/favicon.png",
   },
 };
 
