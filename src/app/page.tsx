@@ -25,54 +25,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-transparent">
-      <header className="border-b border-slate-200 bg-white/90 px-6 py-5 shadow-sm backdrop-blur">
-        <div className="mx-auto flex max-w-6xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <a
-            href="/"
-            className="text-xl font-bold text-slate-800"
-          >
-            Dra. Daiane Damasceno
-          </a>
-
-          <nav className="flex flex-wrap items-center justify-center gap-5 text-sm font-semibold text-slate-600">
-            <a
-              href="/"
-              className="transition hover:text-slate-900"
-            >
-              Home
-            </a>
-
-            <a
-              href="/servicos"
-              className="transition hover:text-slate-900"
-            >
-              Serviços
-            </a>
-
-            <a
-              href="/agendar"
-              className="transition hover:text-slate-900"
-            >
-              Agendar
-            </a>
-
-            <a
-              href="/contato"
-              className="transition hover:text-slate-900"
-            >
-              Contato
-            </a>
-
-            <a
-              href="/login"
-              className="rounded-xl bg-slate-800 px-4 py-2 text-white transition hover:bg-slate-700"
-            >
-              Entrar
-            </a>
-          </nav>
-        </div>
-      </header>
-
       <main className="px-6 py-16">
         <section className="mx-auto max-w-6xl text-center">
           <h1 className="text-4xl font-bold leading-tight text-slate-800 sm:text-5xl">
