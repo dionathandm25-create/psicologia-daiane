@@ -17,7 +17,7 @@ payment_status?: string;
 atendimento_status?: string;
 };
 
-const EMAIL_ADMIN = "contatocomercial.dionathandev@gmail.com";
+const EMAIL_ADMIN = "psi.daianedamasceno@gmail.com";
 
 export default function AdminPage() {
 console.log("### ADMIN PAGE FOI CARREGADA ###");
@@ -1010,4 +1010,5 @@ return (
 </div>
 );
 }
+
 
