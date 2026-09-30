@@ -1,6 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
+const tabelaPrecos: Record<string, number> = {
+  "Consulta inicial": 280,
+  "Consulta sessão": 280,
+  "Pacote com 10 ou mais sessões": 210,
+  "Avaliação neuropsicológica - TDAH": 1050,
+  "Avaliação neuropsicológica - TEA": 1050,
+  "Avaliação neuropsicológica - QI": 1050,
+  "Laudos neuropsicológicos": 1050,
+  "Aplicação ABA": 280,
+  "Pacote com 10 ou mais sessões ABA": 210,
+  "Laudos de cirurgia bariátrica, vasectomia e entre outras cirurgias": 750,
+};
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -50,6 +63,13 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
+
+    /*
+     * O preço é definido no servidor.
+     * Assim, o cliente não consegue escolher
+     * um valor diferente através do navegador.
+     */
+    const valor = tabelaPrecos[servico] ?? null;
 
     const supabase = createClient(
       url,
@@ -233,6 +253,10 @@ export async function POST(request: NextRequest) {
 
     /*
      * 6. Cria o agendamento vinculado ao paciente.
+     *
+     * O valor é salvo junto com o agendamento.
+     * Para os pacotes, cada sessão/agendamento
+     * recebe R$ 210,00.
      */
     const {
       data: novoAgendamento,
@@ -246,11 +270,12 @@ export async function POST(request: NextRequest) {
         telefone:
           telefonePaciente || null,
         servico,
+        valor,
         data,
         horario,
         payment_status: "pendente",
       })
-      .select("id, paciente_id")
+      .select("id, paciente_id, valor")
       .single();
 
     if (erroAgendamento || !novoAgendamento) {
@@ -287,6 +312,7 @@ export async function POST(request: NextRequest) {
       ok: true,
       paciente_id: pacienteId,
       agendamento_id: novoAgendamento.id,
+      valor: novoAgendamento.valor,
     });
   } catch (error) {
     console.error(
