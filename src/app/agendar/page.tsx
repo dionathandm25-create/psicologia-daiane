@@ -1,11 +1,23 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { formatarCPF, horariosPorDia, obterDiaSemana } from "@/lib/horarios";
+import {
+  formatarCPF,
+  horariosPorDia,
+  obterDiaSemana,
+} from "@/lib/horarios";
 
 const servicos = [
-  { nome: "Consulta inicial", valor: 280, label: "R$280,00" },
-  { nome: "Consulta sessão", valor: 280, label: "R$280,00" },
+  {
+    nome: "Consulta inicial",
+    valor: 280,
+    label: "R$280,00",
+  },
+  {
+    nome: "Consulta sessão",
+    valor: 280,
+    label: "R$280,00",
+  },
   {
     nome: "Pacote com 10 ou mais sessões",
     valor: 210,
@@ -63,6 +75,51 @@ function obterHojeLocal() {
   return `${ano}-${mes}-${dia}`;
 }
 
+function formatarDataDigitada(valor: string) {
+  const somenteNumeros = valor.replace(/\D/g, "").slice(0, 8);
+
+  if (somenteNumeros.length <= 2) {
+    return somenteNumeros;
+  }
+
+  if (somenteNumeros.length <= 4) {
+    return `${somenteNumeros.slice(0, 2)}/${somenteNumeros.slice(2)}`;
+  }
+
+  return `${somenteNumeros.slice(0, 2)}/${somenteNumeros.slice(
+    2,
+    4
+  )}/${somenteNumeros.slice(4, 8)}`;
+}
+
+function converterDataParaISO(data: string) {
+  const partes = data.split("/");
+
+  if (partes.length !== 3) {
+    return "";
+  }
+
+  const dia = Number(partes[0]);
+  const mes = Number(partes[1]);
+  const ano = Number(partes[2]);
+
+  if (
+    !Number.isInteger(dia) ||
+    !Number.isInteger(mes) ||
+    !Number.isInteger(ano) ||
+    partes[0].length !== 2 ||
+    partes[1].length !== 2 ||
+    partes[2].length !== 4
+  ) {
+    return "";
+  }
+
+  return `${ano}-${String(mes).padStart(2, "0")}-${String(dia).padStart(
+    2,
+    "0"
+  )}`;
+}
+
 function dataValida(data: string) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(data)) {
     return false;
@@ -74,11 +131,7 @@ function dataValida(data: string) {
     return false;
   }
 
-  const dataObjeto = new Date(
-    ano,
-    mes - 1,
-    dia
-  );
+  const dataObjeto = new Date(ano, mes - 1, dia);
 
   return (
     dataObjeto.getFullYear() === ano &&
@@ -87,9 +140,20 @@ function dataValida(data: string) {
   );
 }
 
+function dataDigitadaValida(data: string) {
+  const dataISO = converterDataParaISO(data);
+
+  if (!dataISO) {
+    return false;
+  }
+
+  return dataValida(dataISO);
+}
+
 export default function AgendarPage() {
   const [servico, setServico] = useState("");
   const [data, setData] = useState("");
+  const [dataDigitada, setDataDigitada] = useState("");
   const [horario, setHorario] = useState("");
 
   const [nome, setNome] = useState("");
@@ -169,6 +233,47 @@ export default function AgendarPage() {
 
     carregarHorariosOcupados();
   }, [data]);
+
+  function alterarData(valor: string) {
+    const novaDataDigitada = formatarDataDigitada(valor);
+
+    setDataDigitada(novaDataDigitada);
+    setData("");
+    setHorario("");
+    setHorariosOcupados([]);
+    setMensagem("");
+
+    if (!novaDataDigitada) {
+      return;
+    }
+
+    if (novaDataDigitada.length < 10) {
+      return;
+    }
+
+    if (!dataDigitadaValida(novaDataDigitada)) {
+      setMensagem(
+        "Digite uma data válida no formato DD/MM/AAAA."
+      );
+      return;
+    }
+
+    const novaDataISO =
+      converterDataParaISO(novaDataDigitada);
+
+    if (!novaDataISO) {
+      return;
+    }
+
+    if (novaDataISO < hoje) {
+      setMensagem(
+        "Escolha uma data de hoje em diante."
+      );
+      return;
+    }
+
+    setData(novaDataISO);
+  }
 
   async function salvarAgendamento() {
     setMensagem("");
@@ -377,36 +482,31 @@ export default function AgendarPage() {
           )}
 
           <div className="mt-6">
-            <label className="mb-3 block text-sm font-semibold text-slate-700">
+            <label
+              htmlFor="data-agendamento"
+              className="mb-3 block text-sm font-semibold text-slate-700"
+            >
               2. Escolha a data
             </label>
 
-            <input
-              type="date"
-              min={hoje}
-              value={data}
-              onChange={(e) => {
-                const novaData = e.target.value;
-
-                if (
-                  novaData &&
-                  !dataValida(novaData)
-                ) {
-                  setData("");
-                  setHorario("");
-                  setHorariosOcupados([]);
-                  setMensagem(
-                    "Escolha uma data válida."
-                  );
-                  return;
+            <div>
+              <input
+                id="data-agendamento"
+                type="text"
+                inputMode="numeric"
+                autoComplete="off"
+                placeholder="DD/MM/AAAA"
+                value={dataDigitada}
+                onChange={(e) =>
+                  alterarData(e.target.value)
                 }
+                className="w-full rounded-2xl border border-rose-200 bg-white px-4 py-4 text-slate-800 outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100"
+              />
 
-                setData(novaData);
-                setHorario("");
-                setMensagem("");
-              }}
-              className="w-full rounded-2xl border border-rose-200 bg-white px-4 py-4 text-slate-800"
-            />
+              <p className="mt-2 text-xs text-slate-500">
+                Digite a data no formato dia/mês/ano.
+              </p>
+            </div>
           </div>
 
           <div className="mt-6">
@@ -461,48 +561,94 @@ export default function AgendarPage() {
               4. Dados do paciente
             </label>
 
-            <div className="space-y-3">
-              <input
-                type="text"
-                placeholder="Nome completo"
-                value={nome}
-                onChange={(e) =>
-                  setNome(e.target.value)
-                }
-                className="w-full rounded-xl border border-rose-200 px-4 py-3"
-              />
+            <div className="space-y-4">
+              <div>
+                <label
+                  htmlFor="nome"
+                  className="mb-1.5 block text-sm font-medium text-slate-700"
+                >
+                  Nome completo
+                </label>
 
-              <input
-                type="text"
-                placeholder="CPF"
-                value={cpf}
-                onChange={(e) =>
-                  setCpf(
-                    formatarCPF(e.target.value)
-                  )
-                }
-                className="w-full rounded-xl border border-rose-200 px-4 py-3"
-              />
+                <input
+                  id="nome"
+                  type="text"
+                  autoComplete="name"
+                  placeholder="Digite seu nome completo"
+                  value={nome}
+                  onChange={(e) =>
+                    setNome(e.target.value)
+                  }
+                  className="w-full rounded-xl border border-rose-200 bg-white px-4 py-3 text-slate-800 outline-none placeholder:text-slate-400 focus:border-rose-400 focus:ring-2 focus:ring-rose-100"
+                />
+              </div>
 
-              <input
-                type="email"
-                placeholder="E-mail"
-                value={email}
-                onChange={(e) =>
-                  setEmail(e.target.value)
-                }
-                className="w-full rounded-xl border border-rose-200 px-4 py-3"
-              />
+              <div>
+                <label
+                  htmlFor="cpf"
+                  className="mb-1.5 block text-sm font-medium text-slate-700"
+                >
+                  CPF
+                </label>
 
-              <input
-                type="text"
-                placeholder="Telefone"
-                value={telefone}
-                onChange={(e) =>
-                  setTelefone(e.target.value)
-                }
-                className="w-full rounded-xl border border-rose-200 px-4 py-3"
-              />
+                <input
+                  id="cpf"
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  placeholder="Digite seu CPF"
+                  value={cpf}
+                  onChange={(e) =>
+                    setCpf(
+                      formatarCPF(e.target.value)
+                    )
+                  }
+                  className="w-full rounded-xl border border-rose-200 bg-white px-4 py-3 text-slate-800 outline-none placeholder:text-slate-400 focus:border-rose-400 focus:ring-2 focus:ring-rose-100"
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="email"
+                  className="mb-1.5 block text-sm font-medium text-slate-700"
+                >
+                  E-mail
+                </label>
+
+                <input
+                  id="email"
+                  type="email"
+                  autoComplete="email"
+                  placeholder="Digite seu e-mail"
+                  value={email}
+                  onChange={(e) =>
+                    setEmail(e.target.value)
+                  }
+                  className="w-full rounded-xl border border-rose-200 bg-white px-4 py-3 text-slate-800 outline-none placeholder:text-slate-400 focus:border-rose-400 focus:ring-2 focus:ring-rose-100"
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="telefone"
+                  className="mb-1.5 block text-sm font-medium text-slate-700"
+                >
+                  Telefone / WhatsApp
+                </label>
+
+                <input
+                  id="telefone"
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  placeholder="Digite seu telefone ou WhatsApp"
+                  value={telefone}
+                  onChange={(e) =>
+                    setTelefone(e.target.value)
+                  }
+                  className="w-full rounded-xl border border-rose-200 bg-white px-4 py-3 text-slate-800 outline-none placeholder:text-slate-400 focus:border-rose-400 focus:ring-2 focus:ring-rose-100"
+                />
+              </div>
             </div>
           </div>
 
