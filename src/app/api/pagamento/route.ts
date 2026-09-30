@@ -1,37 +1,63 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-const tabelaPrecos: Record<string, number> = {
-  "Consulta inicial": 280,
-  "Consulta sessão": 280,
-  "Pacote com 10 ou mais sessões": 210,
-  "Avaliação neuropsicológica - TDAH": 1050,
-  "Avaliação neuropsicológica - TEA": 1050,
-  "Avaliação neuropsicológica - QI": 1050,
-  "Laudos neuropsicológicos": 1050,
-  "Aplicação ABA": 280,
-  "Pacote com 10 ou mais sessões ABA": 210,
-  "Laudos de cirurgia bariátrica, vasectomia e entre outras cirurgias": 750,
-};
-
 export async function POST(req: Request) {
   try {
-    const { agendamentoId, servico } = await req.json();
+    const { agendamentoId } = await req.json();
+
+    if (!agendamentoId) {
+      return NextResponse.json(
+        { error: "Agendamento não informado." },
+        { status: 400 }
+      );
+    }
 
     const accessToken = process.env.MP_ACCESS_TOKEN;
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const serviceRole = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const serviceRole = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-    if (!accessToken) {
+    if (!accessToken || !supabaseUrl || !serviceRole) {
       return NextResponse.json(
-        { error: "MP_ACCESS_TOKEN não configurado." },
+        { error: "Configuração do servidor não encontrada." },
         { status: 500 }
       );
     }
 
-    const valor = tabelaPrecos[servico];
+    const supabase = createClient(
+      supabaseUrl,
+      serviceRole,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+        },
+      }
+    );
 
-    if (!valor) {
+    /*
+     * Busca o agendamento diretamente no banco.
+     * O valor utilizado no pagamento vem do servidor,
+     * e não do navegador.
+     */
+    const {
+      data: agendamento,
+      error: erroAgendamento,
+    } = await supabase
+      .from("agendamentos")
+      .select("id, servico, valor")
+      .eq("id", agendamentoId)
+      .single();
+
+    if (erroAgendamento || !agendamento) {
+      return NextResponse.json(
+        { error: "Agendamento não encontrado." },
+        { status: 404 }
+      );
+    }
+
+    const valor = agendamento.valor;
+
+    if (valor === null || valor === undefined || Number(valor) <= 0) {
       return NextResponse.json(
         {
           error:
@@ -40,8 +66,6 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
-
-    const supabase = createClient(supabaseUrl, serviceRole);
 
     const response = await fetch(
       "https://api.mercadopago.com/checkout/preferences",
@@ -54,10 +78,10 @@ export async function POST(req: Request) {
         body: JSON.stringify({
           items: [
             {
-              title: servico || "Consulta psicológica",
+              title: agendamento.servico || "Consulta psicológica",
               quantity: 1,
               currency_id: "BRL",
-              unit_price: valor,
+              unit_price: Number(valor),
             },
           ],
           payment_methods: {
@@ -65,7 +89,7 @@ export async function POST(req: Request) {
             excluded_payment_methods: [],
             installments: 1,
           },
-          external_reference: String(agendamentoId),
+          external_reference: String(agendamento.id),
           back_urls: {
             success: "https://psicologia-daiane.vercel.app/confirmacao",
             failure: "https://psicologia-daiane.vercel.app/pagamento",
@@ -87,19 +111,36 @@ export async function POST(req: Request) {
       );
     }
 
-    await supabase
+    const { error: erroAtualizacao } = await supabase
       .from("agendamentos")
       .update({
         preference_id: data.id,
         payment_status: "pendente",
       })
-      .eq("id", agendamentoId);
+      .eq("id", agendamento.id);
+
+    if (erroAtualizacao) {
+      console.error(
+        "ERRO AO ATUALIZAR AGENDAMENTO:",
+        erroAtualizacao
+      );
+
+      return NextResponse.json(
+        { error: "Não foi possível atualizar o pagamento." },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
       init_point: data.init_point,
       sandbox_init_point: data.sandbox_init_point,
     });
-  } catch {
+  } catch (error) {
+    console.error(
+      "ERRO INTERNO AO CRIAR PAGAMENTO:",
+      error
+    );
+
     return NextResponse.json(
       { error: "Erro interno ao criar pagamento." },
       { status: 500 }
