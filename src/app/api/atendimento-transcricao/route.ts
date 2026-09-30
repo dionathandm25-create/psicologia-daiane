@@ -4,7 +4,7 @@ import { createClient as createServerClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 
 const EMAIL_ADMIN =
-  "contatocomercial.dionathandev@gmail.com";
+  "psi.daianedamasceno@gmail.com";
 
 const BUCKET_AUDIO =
   "audios-atendimento";
