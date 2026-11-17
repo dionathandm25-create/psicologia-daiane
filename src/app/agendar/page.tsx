@@ -75,51 +75,6 @@ function obterHojeLocal() {
   return `${ano}-${mes}-${dia}`;
 }
 
-function formatarDataDigitada(valor: string) {
-  const somenteNumeros = valor.replace(/\D/g, "").slice(0, 8);
-
-  if (somenteNumeros.length <= 2) {
-    return somenteNumeros;
-  }
-
-  if (somenteNumeros.length <= 4) {
-    return `${somenteNumeros.slice(0, 2)}/${somenteNumeros.slice(2)}`;
-  }
-
-  return `${somenteNumeros.slice(0, 2)}/${somenteNumeros.slice(
-    2,
-    4
-  )}/${somenteNumeros.slice(4, 8)}`;
-}
-
-function converterDataParaISO(data: string) {
-  const partes = data.split("/");
-
-  if (partes.length !== 3) {
-    return "";
-  }
-
-  const dia = Number(partes[0]);
-  const mes = Number(partes[1]);
-  const ano = Number(partes[2]);
-
-  if (
-    !Number.isInteger(dia) ||
-    !Number.isInteger(mes) ||
-    !Number.isInteger(ano) ||
-    partes[0].length !== 2 ||
-    partes[1].length !== 2 ||
-    partes[2].length !== 4
-  ) {
-    return "";
-  }
-
-  return `${ano}-${String(mes).padStart(2, "0")}-${String(dia).padStart(
-    2,
-    "0"
-  )}`;
-}
-
 function dataValida(data: string) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(data)) {
     return false;
@@ -140,20 +95,9 @@ function dataValida(data: string) {
   );
 }
 
-function dataDigitadaValida(data: string) {
-  const dataISO = converterDataParaISO(data);
-
-  if (!dataISO) {
-    return false;
-  }
-
-  return dataValida(dataISO);
-}
-
 export default function AgendarPage() {
   const [servico, setServico] = useState("");
   const [data, setData] = useState("");
-  const [dataDigitada, setDataDigitada] = useState("");
   const [horario, setHorario] = useState("");
 
   const [nome, setNome] = useState("");
@@ -166,6 +110,9 @@ export default function AgendarPage() {
 
   const [horariosOcupados, setHorariosOcupados] =
     useState<string[]>([]);
+  const [carregandoHorarios, setCarregandoHorarios] =
+    useState(false);
+  const [erroHorarios, setErroHorarios] = useState("");
 
   const [abrirServicos, setAbrirServicos] =
     useState(false);
@@ -193,11 +140,18 @@ export default function AgendarPage() {
   );
 
   useEffect(() => {
+    const controller = new AbortController();
+
     async function carregarHorariosOcupados() {
       if (!dataValida(data)) {
         setHorariosOcupados([]);
+        setCarregandoHorarios(false);
+        setErroHorarios("");
         return;
       }
+
+      setCarregandoHorarios(true);
+      setErroHorarios("");
 
       try {
         const res = await fetch(
@@ -206,14 +160,17 @@ export default function AgendarPage() {
           )}`,
           {
             cache: "no-store",
+            signal: controller.signal,
           }
         );
 
         const json = await res.json();
 
         if (!res.ok) {
-          setHorariosOcupados([]);
-          return;
+          throw new Error(
+            json?.error ||
+              "Não foi possível consultar os horários disponíveis."
+          );
         }
 
         setHorariosOcupados(
@@ -222,57 +179,58 @@ export default function AgendarPage() {
             : []
         );
       } catch (error) {
-        console.error(
-          "ERRO AO CARREGAR HORÁRIOS OCUPADOS:",
-          error
-        );
-
-        setHorariosOcupados([]);
+        if (!controller.signal.aborted) {
+          console.error(
+            "ERRO AO CARREGAR HORÁRIOS OCUPADOS:",
+            error
+          );
+          setErroHorarios(
+            "Não foi possível consultar os horários disponíveis. Tente novamente."
+          );
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setCarregandoHorarios(false);
+        }
       }
     }
 
     carregarHorariosOcupados();
+
+    return () => controller.abort();
   }, [data]);
 
   function alterarData(valor: string) {
-    const novaDataDigitada = formatarDataDigitada(valor);
-
-    setDataDigitada(novaDataDigitada);
-    setData("");
+    setData(valor);
     setHorario("");
     setHorariosOcupados([]);
+    setErroHorarios("");
     setMensagem("");
 
-    if (!novaDataDigitada) {
+    if (!valor) {
+      setCarregandoHorarios(false);
       return;
     }
 
-    if (novaDataDigitada.length < 10) {
-      return;
-    }
-
-    if (!dataDigitadaValida(novaDataDigitada)) {
+    if (!dataValida(valor)) {
+      setData("");
+      setCarregandoHorarios(false);
       setMensagem(
-        "Digite uma data válida no formato DD/MM/AAAA."
+        "Selecione uma data válida."
       );
       return;
     }
 
-    const novaDataISO =
-      converterDataParaISO(novaDataDigitada);
-
-    if (!novaDataISO) {
-      return;
-    }
-
-    if (novaDataISO < hoje) {
+    if (valor < hoje) {
+      setData("");
+      setCarregandoHorarios(false);
       setMensagem(
         "Escolha uma data de hoje em diante."
       );
       return;
     }
 
-    setData(novaDataISO);
+    setCarregandoHorarios(true);
   }
 
   async function salvarAgendamento() {
@@ -492,20 +450,14 @@ export default function AgendarPage() {
             <div>
               <input
                 id="data-agendamento"
-                type="text"
-                inputMode="numeric"
-                autoComplete="off"
-                placeholder="DD/MM/AAAA"
-                value={dataDigitada}
+                type="date"
+                min={hoje}
+                value={data}
                 onChange={(e) =>
                   alterarData(e.target.value)
                 }
-                className="w-full rounded-2xl border border-rose-200 bg-white px-4 py-4 text-slate-800 outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100"
+                className="w-full cursor-pointer rounded-2xl border border-rose-200 bg-white px-4 py-4 text-slate-800 outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100"
               />
-
-              <p className="mt-2 text-xs text-slate-500">
-                Digite a data no formato dia/mês/ano.
-              </p>
             </div>
           </div>
 
@@ -521,6 +473,20 @@ export default function AgendarPage() {
             ) : !dataValida(data) ? (
               <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
                 A data selecionada é inválida.
+              </p>
+            ) : carregandoHorarios ? (
+              <p
+                role="status"
+                className="rounded-xl bg-white px-4 py-3 text-sm text-slate-500"
+              >
+                Consultando horários disponíveis...
+              </p>
+            ) : erroHorarios ? (
+              <p
+                role="alert"
+                className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600"
+              >
+                {erroHorarios}
               </p>
             ) : horariosDisponiveis.length === 0 ? (
               <p className="rounded-xl bg-white px-4 py-3 text-sm text-slate-500">

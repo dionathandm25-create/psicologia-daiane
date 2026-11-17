@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import GoogleLoginButton from "@/components/auth/GoogleLoginButton";
 
 type Agendamento = {
   id: number;
@@ -127,10 +128,15 @@ export default function AdminPage() {
 
   async function sair() {
     const supabase = createClient();
+    const { error } = await supabase.auth.signOut();
 
-    await supabase.auth.signOut();
+    if (error) {
+      console.error("Erro ao encerrar sessão:", error);
+      setErro("Não foi possível encerrar sua sessão. Tente novamente.");
+      return;
+    }
 
-    window.location.reload();
+    window.location.assign("/login");
   }
 
   async function cancelarAgendamento(id: number) {
@@ -174,7 +180,7 @@ export default function AdminPage() {
     setMenuSiteAberto(false);
 
     if (pagina === "home") {
-      window.location.href = "/";
+      window.location.href = "/servicos";
       return;
     }
 
@@ -204,10 +210,12 @@ export default function AdminPage() {
       <div className="min-h-screen bg-transparent px-4 py-10 sm:px-6">
         <div className="mx-auto flex min-h-[70vh] max-w-4xl items-center justify-center">
           <div className="w-full rounded-3xl border border-pink-100 bg-white/95 p-10 text-center shadow-xl">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-pink-50">
-              <img
-                src="/logo-daiane.png"
-                alt="Dra. Daiane"
+            <div className="mx-auto flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl">
+              <Image
+                src="/images/transformacao-saude/logo/simbolo-integrado.png"
+                alt="Logomarca Transformação Saúde"
+                width={56}
+                height={56}
                 className="h-full w-full object-contain p-1"
               />
             </div>
@@ -230,10 +238,12 @@ export default function AdminPage() {
       <div className="min-h-screen bg-transparent px-4 py-10 sm:px-6">
         <div className="mx-auto flex min-h-[70vh] max-w-4xl items-center justify-center">
           <div className="w-full max-w-xl rounded-3xl border border-pink-100 bg-white/95 p-8 text-center shadow-xl sm:p-10">
-            <div className="mx-auto flex h-20 w-20 items-center justify-center overflow-hidden rounded-3xl bg-pink-50 shadow-sm">
-              <img
-                src="/logo-daiane.png"
-                alt="Logo Dra. Daiane Damasceno"
+            <div className="mx-auto flex h-20 w-20 items-center justify-center overflow-hidden rounded-3xl shadow-sm">
+              <Image
+                src="/images/transformacao-saude/logo/simbolo-integrado.png"
+                alt="Logomarca Transformação Saúde"
+                width={80}
+                height={80}
                 className="h-full w-full object-contain p-2"
               />
             </div>
@@ -257,9 +267,12 @@ export default function AdminPage() {
               </div>
             )}
 
-            <div className="mt-8 flex justify-center">
-              <GoogleLoginButton />
-            </div>
+            <Link
+              href="/login"
+              className="brand-action mt-8 inline-flex rounded-xl px-6 py-3 font-semibold"
+            >
+              Ir para a tela de login
+            </Link>
           </div>
         </div>
       </div>
@@ -297,10 +310,12 @@ export default function AdminPage() {
 
             <div className="border-b border-pink-100 px-5 py-5">
               <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-pink-50">
-                  <img
-                    src="/logo-daiane.png"
-                    alt="Dra. Daiane Damasceno"
+                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl">
+                  <Image
+                    src="/images/transformacao-saude/logo/simbolo-integrado.png"
+                    alt="Logomarca Transformação Saúde"
+                    width={48}
+                    height={48}
                     className="h-full w-full object-contain p-1"
                   />
                 </div>
@@ -347,7 +362,7 @@ export default function AdminPage() {
                   <span>Agenda</span>
                 </a>
 
-                <a
+                <Link
                   href="/admin/pacientes"
                   className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-pink-50 hover:text-pink-700"
                 >
@@ -356,9 +371,9 @@ export default function AdminPage() {
                   </span>
 
                   <span>Pacientes</span>
-                </a>
+                </Link>
 
-                <a
+                <Link
                   href="/admin/pacientes"
                   className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-pink-50 hover:text-pink-700"
                 >
@@ -367,7 +382,7 @@ export default function AdminPage() {
                   </span>
 
                   <span>Prontuários</span>
-                </a>
+                </Link>
 
                 {/* FINANCEIRO */}
 
@@ -510,10 +525,12 @@ export default function AdminPage() {
         <div className="border-b border-pink-100 bg-white/95 shadow-sm lg:hidden">
           <div className="flex items-center justify-between gap-3 px-4 py-3">
             <div className="flex min-w-0 items-center gap-3">
-              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl bg-pink-50">
-                <img
-                  src="/logo-daiane.png"
-                  alt="Dra. Daiane"
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl">
+                <Image
+                  src="/images/transformacao-saude/logo/simbolo-integrado.png"
+                  alt="Logomarca Transformação Saúde"
+                  width={40}
+                  height={40}
                   className="h-full w-full object-contain p-1"
                 />
               </div>
@@ -557,19 +574,19 @@ export default function AdminPage() {
                   Agenda
                 </a>
 
-                <a
+                <Link
                   href="/admin/pacientes"
                   className="rounded-xl bg-slate-50 px-3 py-2.5 text-center text-sm font-medium text-slate-600"
                 >
                   Pacientes
-                </a>
+                </Link>
 
-                <a
+                <Link
                   href="/admin/pacientes"
                   className="rounded-xl bg-slate-50 px-3 py-2.5 text-center text-sm font-medium text-slate-600"
                 >
                   Prontuários
-                </a>
+                </Link>
 
                 <a
                   href="/admin/financeiro"
@@ -929,7 +946,7 @@ export default function AdminPage() {
               </div>
 
               <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-                <a
+                <Link
                   href="/admin/pacientes"
                   className="group rounded-3xl border border-pink-100 bg-white/95 p-6 shadow-sm transition hover:-translate-y-1 hover:border-pink-200 hover:shadow-lg"
                 >
@@ -950,7 +967,7 @@ export default function AdminPage() {
                     Acessar pacientes
                     <span>→</span>
                   </span>
-                </a>
+                </Link>
 
                 <div className="rounded-3xl border border-pink-100 bg-white/95 p-6 shadow-sm transition hover:-translate-y-1 hover:border-pink-200 hover:shadow-lg">
                   <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-50 text-2xl">
@@ -966,13 +983,13 @@ export default function AdminPage() {
                     dos atendimentos.
                   </p>
 
-                  <a
+                  <Link
                     href="/admin/pacientes"
                     className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-pink-600"
                   >
                     Acessar
                     <span>→</span>
-                  </a>
+                  </Link>
                 </div>
 
                 <div className="rounded-3xl border border-pink-100 bg-white/95 p-6 shadow-sm transition hover:-translate-y-1 hover:border-pink-200 hover:shadow-lg">

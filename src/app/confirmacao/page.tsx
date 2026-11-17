@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function ConfirmacaoPage() {
   return (
     <div className="min-h-screen bg-transparent px-6 py-16">
@@ -15,18 +17,18 @@ export default function ConfirmacaoPage() {
         </p>
 
         <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:justify-center">
-          <a
-            href="/"
+          <Link
+            href="/servicos"
             className="rounded-2xl border border-slate-300 bg-white px-6 py-4 font-semibold text-slate-700 hover:bg-slate-100"
           >
             Voltar para o início
-          </a>
+          </Link>
 
           <a
-            href="/admin"
+            href="/login"
             className="rounded-2xl bg-slate-800 px-6 py-4 font-semibold text-white hover:bg-slate-700"
           >
-            Ir para painel
+            Acessar minha área
           </a>
         </div>
       </div>

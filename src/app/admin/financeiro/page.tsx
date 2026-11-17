@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 
 const EMAIL_ADMIN = "psi.daianedamasceno@gmail.com";
@@ -181,7 +183,7 @@ export default function FinanceiroPage() {
           !user ||
           user.email?.toLowerCase() !== EMAIL_ADMIN
         ) {
-          window.location.href = "/admin";
+          window.location.href = "/login";
           return;
         }
 
@@ -204,8 +206,15 @@ export default function FinanceiroPage() {
   }, []);
 
   async function sair() {
-    await supabase.auth.signOut();
-    window.location.href = "/admin";
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      console.error("Erro ao encerrar sessão:", error);
+      setErro("Não foi possível encerrar sua sessão. Tente novamente.");
+      return;
+    }
+
+    window.location.href = "/login";
   }
 
   const pagamentosFiltrados = useMemo(() => {
@@ -238,10 +247,12 @@ export default function FinanceiroPage() {
       <div className="min-h-screen bg-transparent px-4 py-10 sm:px-6">
         <div className="mx-auto flex min-h-[70vh] max-w-4xl items-center justify-center">
           <div className="w-full rounded-3xl border border-pink-100 bg-white/95 p-10 text-center shadow-xl">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-pink-50">
-              <img
-                src="/logo-daiane.png"
-                alt="Dra. Daiane"
+            <div className="mx-auto flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl">
+              <Image
+                src="/images/transformacao-saude/logo/simbolo-integrado.png"
+                alt="Logomarca Transformação Saúde"
+                width={56}
+                height={56}
                 className="h-full w-full object-contain p-1"
               />
             </div>
@@ -271,10 +282,12 @@ export default function FinanceiroPage() {
         <div className="flex h-full w-full flex-col">
           <div className="border-b border-pink-100 px-5 py-5">
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-pink-50">
-                <img
-                  src="/logo-daiane.png"
-                  alt="Dra. Daiane Damasceno"
+              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl">
+                <Image
+                  src="/images/transformacao-saude/logo/simbolo-integrado.png"
+                  alt="Logomarca Transformação Saúde"
+                  width={48}
+                  height={48}
                   className="h-full w-full object-contain p-1"
                 />
               </div>
@@ -319,7 +332,7 @@ export default function FinanceiroPage() {
                 <span>Agenda</span>
               </a>
 
-              <a
+              <Link
                 href="/admin/pacientes"
                 className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-pink-50 hover:text-pink-700"
               >
@@ -328,9 +341,9 @@ export default function FinanceiroPage() {
                 </span>
 
                 <span>Pacientes</span>
-              </a>
+              </Link>
 
-              <a
+              <Link
                 href="/admin/pacientes"
                 className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-pink-50 hover:text-pink-700"
               >
@@ -339,7 +352,7 @@ export default function FinanceiroPage() {
                 </span>
 
                 <span>Prontuários</span>
-              </a>
+              </Link>
 
               <a
                 href="/admin/financeiro"
@@ -400,10 +413,12 @@ export default function FinanceiroPage() {
       <div className="border-b border-pink-100 bg-white/95 shadow-sm lg:hidden">
         <div className="flex items-center justify-between gap-3 px-4 py-3">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl bg-pink-50">
-              <img
-                src="/logo-daiane.png"
-                alt="Dra. Daiane"
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl">
+              <Image
+                src="/images/transformacao-saude/logo/simbolo-integrado.png"
+                alt="Logomarca Transformação Saúde"
+                width={40}
+                height={40}
                 className="h-full w-full object-contain p-1"
               />
             </div>

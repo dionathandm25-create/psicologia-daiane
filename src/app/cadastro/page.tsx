@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import Link from "next/link";
 import GoogleLoginButton from "@/components/auth/GoogleLoginButton";
 
 export default function CadastroPage() {
@@ -37,12 +38,12 @@ export default function CadastroPage() {
         </div>
 
         <div className="mt-4 text-center">
-          <a
-            href="/"
+          <Link
+            href="/servicos"
             className="text-sm text-slate-500 hover:text-slate-700"
           >
             Voltar para o início
-          </a>
+          </Link>
         </div>
       </section>
     </main>

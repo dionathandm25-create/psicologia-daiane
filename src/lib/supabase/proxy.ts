@@ -1,0 +1,51 @@
+import { createServerClient } from "@supabase/ssr";
+import { NextResponse, type NextRequest } from "next/server";
+
+export async function updateSession(request: NextRequest) {
+  let response = NextResponse.next({ request });
+  const cookieWriters: Array<(target: NextResponse) => void> = [];
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) =>
+            request.cookies.set(name, value)
+          );
+          response = NextResponse.next({ request });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options)
+          );
+          cookieWriters.push((target) => {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              target.cookies.set(name, value, options)
+            );
+          });
+        },
+      },
+    }
+  );
+
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+
+  if (error && error.name !== "AuthSessionMissingError") {
+    console.error("Erro ao validar a sessão Supabase:", error);
+  }
+
+  return {
+    response,
+    supabase,
+    copyCookies(target: NextResponse) {
+      cookieWriters.forEach((writeCookies) => writeCookies(target));
+    },
+    user: error ? null : user,
+  };
+}

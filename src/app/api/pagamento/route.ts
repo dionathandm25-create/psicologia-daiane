@@ -4,6 +4,13 @@ import { createClient } from "@supabase/supabase-js";
 export async function POST(req: Request) {
   try {
     const { agendamentoId } = await req.json();
+    const requestOrigin = new URL(req.url);
+    const origemLocalPermitida =
+      requestOrigin.hostname === "localhost" ||
+      requestOrigin.hostname === "127.0.0.1";
+    const origem = origemLocalPermitida
+      ? requestOrigin.origin
+      : "https://psicologia-daiane.vercel.app";
 
     if (!agendamentoId) {
       return NextResponse.json(
@@ -91,9 +98,9 @@ export async function POST(req: Request) {
           },
           external_reference: String(agendamento.id),
           back_urls: {
-            success: "https://psicologia-daiane.vercel.app/confirmacao",
-            failure: "https://psicologia-daiane.vercel.app/pagamento",
-            pending: "https://psicologia-daiane.vercel.app/pagamento",
+            success: `${origem}/confirmacao`,
+            failure: `${origem}/pagamento`,
+            pending: `${origem}/pagamento`,
           },
           auto_return: "approved",
           notification_url:

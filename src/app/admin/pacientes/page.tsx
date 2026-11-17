@@ -172,10 +172,15 @@ export default function PacientesPage() {
 
   async function sair() {
     const supabase = createClient();
+    const { error } = await supabase.auth.signOut();
 
-    await supabase.auth.signOut();
+    if (error) {
+      console.error("Erro ao encerrar sessão:", error);
+      setErro("Não foi possível encerrar sua sessão. Tente novamente.");
+      return;
+    }
 
-    window.location.href = "/admin";
+    window.location.href = "/login";
   }
 
   function abrirHistorico(id: number) {
@@ -215,7 +220,7 @@ export default function PacientesPage() {
           <button
             type="button"
             onClick={() =>
-              (window.location.href = "/admin")
+              (window.location.href = "/login")
             }
             className="mt-8 rounded-2xl bg-slate-800 px-6 py-3 font-semibold text-white hover:bg-slate-700"
           >

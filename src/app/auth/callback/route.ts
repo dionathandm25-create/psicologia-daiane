@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { getAuthenticatedPath } from "@/lib/auth/redirects";
 
 const EMAIL_ADMIN = "psi.daianedamasceno@gmail.com";
 
@@ -52,6 +53,7 @@ export async function GET(request: Request) {
   } = await supabase.auth.getUser();
 
   const email = user?.email?.trim().toLowerCase();
+  const requestedPath = requestUrl.searchParams.get("next");
 
   if (!user || !email) {
     await supabase.auth.signOut();
@@ -62,7 +64,8 @@ export async function GET(request: Request) {
   }
 
   if (email === EMAIL_ADMIN.toLowerCase()) {
-    return NextResponse.redirect(`${origin}/admin`);
+    const destination = getAuthenticatedPath(email, requestedPath);
+    return NextResponse.redirect(`${origin}${destination}`);
   }
 
   try {
@@ -146,7 +149,8 @@ export async function GET(request: Request) {
       }
     }
 
-    return NextResponse.redirect(`${origin}/paciente`);
+    const destination = getAuthenticatedPath(email, requestedPath);
+    return NextResponse.redirect(`${origin}${destination}`);
   } catch (error) {
     console.error(
       "ERRO AO PROCESSAR LOGIN DO PACIENTE:",

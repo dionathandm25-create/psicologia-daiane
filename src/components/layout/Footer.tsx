@@ -1,4 +1,6 @@
-﻿export default function Footer() {
+﻿import Link from "next/link";
+
+export default function Footer() {
   const mensagem = encodeURIComponent(
     "Olá! Gostaria de criar um site para o meu negócio.\n\nVi o trabalho da Dra. Daiane Damasceno e gostaria de criar algo semelhante, personalizado para minha empresa.\n\nGostaria de saber como funciona e solicitar um orçamento."
   );
@@ -19,6 +21,13 @@
       >
         Quero criar meu site
       </a>
+
+      <Link
+        href="/politica-de-privacidade"
+        className="mt-2 inline-block text-sm font-medium text-[#640219] hover:text-[#BD6F0A] hover:underline"
+      >
+        Política de Privacidade
+      </Link>
     </footer>
   );
 }

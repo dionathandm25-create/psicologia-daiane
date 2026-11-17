@@ -1,5 +1,42 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import {
+  horariosPorDia,
+  obterDiaSemana,
+} from "@/lib/horarios";
+
+function dataISOValida(data: unknown): data is string {
+  if (
+    typeof data !== "string" ||
+    !/^\d{4}-\d{2}-\d{2}$/.test(data)
+  ) {
+    return false;
+  }
+
+  const [ano, mes, dia] = data.split("-").map(Number);
+  const dataUTC = new Date(Date.UTC(ano, mes - 1, dia));
+
+  return (
+    dataUTC.getUTCFullYear() === ano &&
+    dataUTC.getUTCMonth() === mes - 1 &&
+    dataUTC.getUTCDate() === dia
+  );
+}
+
+function obterHojeEmSaoPaulo() {
+  const partes = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+
+  const ano = partes.find((parte) => parte.type === "year")?.value;
+  const mes = partes.find((parte) => parte.type === "month")?.value;
+  const dia = partes.find((parte) => parte.type === "day")?.value;
+
+  return `${ano}-${mes}-${dia}`;
+}
 
 const tabelaPrecos: Record<string, number> = {
   "Consulta inicial": 280,
@@ -37,10 +74,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(data)) {
+    if (!dataISOValida(data)) {
       return NextResponse.json(
         {
           error: "A data informada é inválida.",
+        },
+        { status: 400 }
+      );
+    }
+
+    if (data < obterHojeEmSaoPaulo()) {
+      return NextResponse.json(
+        {
+          error: "Escolha uma data de hoje em diante.",
+        },
+        { status: 400 }
+      );
+    }
+
+    const horariosDoDia = horariosPorDia[obterDiaSemana(data)] || [];
+
+    if (!horariosDoDia.includes(horario)) {
+      return NextResponse.json(
+        {
+          error:
+            "O horário escolhido não está disponível para essa data.",
         },
         { status: 400 }
       );

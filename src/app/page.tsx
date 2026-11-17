@@ -42,7 +42,7 @@ export default function Home() {
           <div className="mt-10">
             <a
               href="/agendar"
-              className="inline-flex rounded-2xl bg-slate-800 px-10 py-4 text-lg font-semibold text-white shadow-lg transition hover:bg-slate-700"
+              className="brand-action inline-flex rounded-2xl px-10 py-4 text-lg font-semibold"
             >
               Agendar Consulta
             </a>
@@ -54,13 +54,13 @@ export default function Home() {
             Serviços
           </h2>
 
-          <div className="mt-12 grid gap-8 md:grid-cols-2">
+          <div className="brand-card-grid mt-12 grid gap-8 md:grid-cols-2">
             {servicos.map((servico) => (
               <div
                 key={servico.titulo}
-                className="rounded-2xl bg-white p-8 shadow-md"
+                className="brand-card rounded-2xl p-8"
               >
-                <h3 className="text-2xl font-semibold text-slate-800">
+                <h3 className="text-2xl font-semibold text-[#640219]">
                   {servico.titulo}
                 </h3>
 
@@ -68,7 +68,7 @@ export default function Home() {
                   {servico.descricao}
                 </p>
 
-                <p className="mt-4 text-lg font-bold text-slate-800">
+                <p className="mt-4 text-lg font-bold text-[#640219]">
                   {servico.preco}
                 </p>
               </div>

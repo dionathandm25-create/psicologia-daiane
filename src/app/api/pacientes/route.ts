@@ -132,12 +132,12 @@ export async function GET(request: Request) {
       (paciente) => paciente.id
     );
 
-    let quantidadeConsultas: Record<
+    const quantidadeConsultas: Record<
       number,
       number
     > = {};
 
-    let ultimoAtendimento: Record<
+    const ultimoAtendimento: Record<
       number,
       string
     > = {};

@@ -124,8 +124,13 @@ export default function PacientePage() {
 
   async function sair() {
     const supabase = createClient();
+    const { error } = await supabase.auth.signOut();
 
-    await supabase.auth.signOut();
+    if (error) {
+      console.error("Erro ao encerrar sessão:", error);
+      setErro("Não foi possível encerrar sua sessão. Tente novamente.");
+      return;
+    }
 
     router.replace("/login");
   }

@@ -54,13 +54,13 @@ export default function ServicosPage() {
         </p>
       </div>
 
-      <div className="mx-auto max-w-3xl space-y-6">
+      <div className="brand-card-grid mx-auto max-w-3xl space-y-6">
         {servicos.map((servico, index) => (
           <div
             key={index}
-            className="rounded-2xl bg-white p-6 shadow-md"
+            className="brand-card rounded-2xl p-6"
           >
-            <h2 className="text-xl font-semibold text-slate-800">
+            <h2 className="text-xl font-semibold text-[#640219]">
               {servico.titulo}
             </h2>
 
@@ -68,7 +68,7 @@ export default function ServicosPage() {
               {servico.descricao}
             </p>
 
-            <p className="mt-4 text-lg font-bold text-slate-800">
+            <p className="mt-4 text-lg font-bold text-[#640219]">
               {servico.preco}
             </p>
           </div>
@@ -78,7 +78,7 @@ export default function ServicosPage() {
       <div className="mt-12 text-center">
         <a
           href="/agendar"
-          className="inline-block rounded-xl bg-slate-800 px-8 py-4 text-lg font-semibold text-white"
+          className="brand-action inline-block rounded-xl px-8 py-4 text-lg font-semibold"
         >
           Agendar Consulta
         </a>

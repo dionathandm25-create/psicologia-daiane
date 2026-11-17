@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 type Agendamento = {
   id: number;
@@ -14,19 +14,24 @@ type Agendamento = {
 
 export default function PagamentoPage() {
   const [loading, setLoading] = useState(false);
-  const [agendamento, setAgendamento] = useState<Agendamento | null>(null);
-  const [erro, setErro] = useState("");
-
-  useEffect(() => {
-    const raw = localStorage.getItem("agendamento_daiane");
-    if (raw) {
-      try {
-        setAgendamento(JSON.parse(raw));
-      } catch {
-        setAgendamento(null);
-      }
+  const [agendamento] = useState<Agendamento | null>(() => {
+    if (typeof window === "undefined") {
+      return null;
     }
-  }, []);
+
+    const raw = window.localStorage.getItem("agendamento_daiane");
+
+    if (!raw) {
+      return null;
+    }
+
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return null;
+    }
+  });
+  const [erro, setErro] = useState("");
 
   async function pagar() {
     if (!agendamento?.id) {

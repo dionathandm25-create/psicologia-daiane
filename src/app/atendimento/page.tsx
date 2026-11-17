@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function AtendimentoPage() {
+  const router = useRouter();
   const [segundos, setSegundos] = useState(0);
   const [iniciado, setIniciado] = useState(false);
   const [finalizado, setFinalizado] = useState(false);
@@ -93,7 +95,7 @@ export default function AtendimentoPage() {
 
           <button
             type="button"
-            onClick={() => window.history.back()}
+            onClick={() => router.push("/admin")}
             className="rounded-2xl border border-slate-300 bg-white px-8 py-4 font-semibold text-slate-700 hover:bg-slate-100"
           >
             Voltar

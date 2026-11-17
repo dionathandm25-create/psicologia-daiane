@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #feedd9;
+  --foreground: #640219;
 }
 
 @theme inline {
@@ -12,15 +12,175 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+body {
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
+  background: transparent;
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+body::before {
+  position: fixed;
+  z-index: -1;
+  inset: 0;
+  background-color: var(--background);
+  background-image: url("/images/transformacao-saude/backgrounds/fundo-original.jpeg");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  content: "";
+  pointer-events: none;
+}
+
+.brand-card-grid {
+  perspective: 1200px;
+}
+
+.brand-card {
+  border: 1px solid rgb(100 2 25 / 12%);
+  background: rgb(255 255 255 / 94%);
+  box-shadow:
+    0 12px 24px rgb(100 2 25 / 12%),
+    0 4px 8px rgb(189 111 10 / 12%);
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    border-color 180ms ease;
+}
+
+.brand-card:hover {
+  transform: perspective(1200px) translateY(-4px) rotateX(1deg);
+  border-color: rgb(189 111 10 / 55%);
+  box-shadow:
+    0 18px 30px rgb(100 2 25 / 16%),
+    0 6px 12px rgb(189 111 10 / 15%);
+}
+
+.brand-action {
+  background: #640219;
+  color: #fffaf3;
+  box-shadow: 0 8px 18px rgb(100 2 25 / 20%);
+  transition:
+    transform 180ms ease,
+    background-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.brand-action:hover {
+  transform: translateY(-2px);
+  background: #7c1734;
+  box-shadow: 0 12px 22px rgb(100 2 25 / 24%);
+}
+
+.brand-action:focus-visible {
+  outline: 3px solid #bd6f0a;
+  outline-offset: 3px;
+}
+
+@keyframes brand-loader-fill {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scaleY(0.16);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scaleY(0.88);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@keyframes brand-loader-breathe {
+  0%,
+  100% {
+    transform: scale(0.97);
+  }
+
+  50% {
+    transform: scale(1.03);
+  }
+}
+
+.brand-loader-emblem {
+  position: relative;
+  display: grid;
+  width: 12rem;
+  height: 12rem;
+  place-items: center;
+  overflow: hidden;
+  border: 2px solid rgb(189 111 10 / 65%);
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 35% 25%,
+    rgb(255 250 243 / 96%),
+    rgb(248 223 175 / 78%) 62%,
+    rgb(189 111 10 / 18%)
+  );
+  box-shadow:
+    0 16px 36px rgb(100 2 25 / 16%),
+    inset 0 0 20px rgb(189 111 10 / 14%);
+  animation: brand-loader-breathe 2.2s ease-in-out infinite;
+}
+
+.brand-loader-grid {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+.brand-loader-grid::before {
+  position: absolute;
+  inset: -2px;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      rgb(100 2 25 / 15%) 0 1px,
+      transparent 1px 15px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgb(189 111 10 / 18%) 0 1px,
+      transparent 1px 15px
+    ),
+    linear-gradient(
+      180deg,
+      rgb(248 223 175 / 18%),
+      rgb(189 111 10 / 66%)
+    );
+  content: "";
+  transform: scaleY(0.16);
+  transform-origin: center bottom;
+  animation: brand-loader-fill 1.8s ease-in-out infinite;
+}
+
+.brand-loader-logo {
+  position: relative;
+  z-index: 1;
+  width: 9.5rem;
+  height: 9.5rem;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 4px 16px rgb(100 2 25 / 18%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-card,
+  .brand-action,
+  .brand-loader-emblem,
+  .brand-loader-grid::before {
+    transition: none;
+    animation: none;
+  }
+
+  .brand-card:hover,
+  .brand-action:hover {
+    transform: none;
+  }
+
+  .brand-loader-grid::before {
+    transform: scaleY(0.48);
+  }
 }
