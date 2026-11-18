@@ -135,8 +135,11 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-[70vh] items-center justify-center bg-transparent px-4 py-12 sm:px-6">
-      <section className="w-full max-w-lg rounded-3xl border border-[#BD6F0A]/30 bg-[#fffaf3]/95 p-6 shadow-[0_20px_60px_rgba(100,2,25,0.18)] backdrop-blur-sm sm:p-10">
+    <div className="flex min-h-screen items-center justify-center bg-transparent px-4 py-8 sm:px-6 sm:py-10">
+      <section
+        aria-labelledby="login-titulo"
+        className="w-full max-w-lg rounded-3xl border border-[#BD6F0A]/30 bg-[#fffaf3]/95 p-6 shadow-[0_20px_60px_rgba(100,2,25,0.18)] backdrop-blur-sm sm:p-10"
+      >
         <div className="text-center">
           <Image
             src="/images/transformacao-saude/logo/simbolo-integrado.png"
@@ -148,7 +151,10 @@ export default function LoginPage() {
           <p className="mt-4 text-xs font-semibold uppercase tracking-[0.22em] text-[#BD6F0A]">
             Dra. Daiane Damasceno
           </p>
-          <h1 className="mt-2 text-3xl font-bold text-[#640219] sm:text-4xl">
+          <h1
+            id="login-titulo"
+            className="mt-2 text-3xl font-bold text-[#640219] sm:text-4xl"
+          >
             Acesse sua conta
           </h1>
           <p className="mt-3 text-sm leading-6 text-[#451326]/75">
@@ -255,21 +261,6 @@ export default function LoginPage() {
               className="font-semibold text-[#640219] underline decoration-[#BD6F0A]/60 underline-offset-4 hover:text-[#BD6F0A]"
             >
               Criar cadastro
-            </Link>
-          </p>
-          <p>
-            <Link
-              href="/servicos"
-              className="font-semibold text-[#640219] hover:text-[#BD6F0A]"
-            >
-              Conheça os serviços
-            </Link>
-            {" · "}
-            <Link
-              href="/agendar"
-              className="font-semibold text-[#640219] hover:text-[#BD6F0A]"
-            >
-              Agendar consulta
             </Link>
           </p>
         </div>

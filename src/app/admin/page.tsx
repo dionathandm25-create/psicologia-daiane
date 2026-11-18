@@ -176,7 +176,7 @@ export default function AdminPage() {
     window.location.href = `/atendimento/${id}`;
   }
 
-  function abrirPaginaSite(pagina: string) {
+  function abrirPaginaSite(pagina: "home" | "contato" | "servicos") {
     setMenuSiteAberto(false);
 
     if (pagina === "home") {
@@ -191,12 +191,7 @@ export default function AdminPage() {
 
     if (pagina === "servicos") {
       window.location.href = "/servicos";
-      return;
     }
-
-    alert(
-      "Esta área de edição será criada na próxima etapa."
-    );
   }
 
   function alternarAgenda(id: number) {
@@ -439,14 +434,6 @@ export default function AdminPage() {
 
                     <button
                       type="button"
-                      onClick={() => abrirPaginaSite("sobre")}
-                      className="block w-full rounded-lg px-3 py-2 text-left text-sm text-slate-500 transition hover:bg-pink-50 hover:text-pink-700"
-                    >
-                      Sobre
-                    </button>
-
-                    <button
-                      type="button"
                       onClick={() => abrirPaginaSite("servicos")}
                       className="block w-full rounded-lg px-3 py-2 text-left text-sm text-slate-500 transition hover:bg-pink-50 hover:text-pink-700"
                     >
@@ -461,38 +448,10 @@ export default function AdminPage() {
                       Contato
                     </button>
 
-                    <button
-                      type="button"
-                      onClick={() =>
-                        abrirPaginaSite("identidade")
-                      }
-                      className="block w-full rounded-lg px-3 py-2 text-left text-sm text-slate-500 transition hover:bg-pink-50 hover:text-pink-700"
-                    >
-                      Identidade da Dra.
-                    </button>
                   </div>
                 )}
               </div>
 
-              <p className="px-3 pb-2 pt-7 text-[10px] font-bold uppercase tracking-[0.2em] text-pink-400">
-                Sistema
-              </p>
-
-              <button
-                type="button"
-                onClick={() =>
-                  alert(
-                    "A área de configurações será criada na próxima etapa."
-                  )
-                }
-                className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium text-slate-600 transition hover:bg-pink-50 hover:text-pink-700"
-              >
-                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-50 text-xs">
-                  ⚙
-                </span>
-
-                <span>Configurações</span>
-              </button>
             </nav>
 
             {/* RODAPÉ */}
@@ -603,17 +562,6 @@ export default function AdminPage() {
                   Site
                 </button>
 
-                <button
-                  type="button"
-                  onClick={() =>
-                    alert(
-                      "A área de configurações será criada na próxima etapa."
-                    )
-                  }
-                  className="rounded-xl bg-slate-50 px-3 py-2.5 text-sm font-medium text-slate-600"
-                >
-                  Configurações
-                </button>
               </div>
             </nav>
           )}

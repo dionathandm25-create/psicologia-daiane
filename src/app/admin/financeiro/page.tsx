@@ -366,25 +366,6 @@ export default function FinanceiroPage() {
               </a>
             </div>
 
-            <p className="px-3 pb-2 pt-7 text-[10px] font-bold uppercase tracking-[0.2em] text-pink-400">
-              Sistema
-            </p>
-
-            <button
-              type="button"
-              onClick={() =>
-                alert(
-                  "A área de configurações será criada na próxima etapa."
-                )
-              }
-              className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium text-slate-600 transition hover:bg-pink-50 hover:text-pink-700"
-            >
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-50 text-xs">
-                ⚙
-              </span>
-
-              <span>Configurações</span>
-            </button>
           </nav>
 
           <div className="border-t border-pink-100 p-4">
