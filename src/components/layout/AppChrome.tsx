@@ -18,14 +18,27 @@ export default function AppChrome({ children }: { children: ReactNode }) {
   const telaDeAutenticacao =
     ROTAS_DE_AUTENTICACAO.includes(pathname) ||
     pathname.startsWith("/auth/");
+  const telaDePainel =
+    pathname === "/admin" ||
+    pathname.startsWith("/admin/") ||
+    pathname === "/paciente" ||
+    pathname.startsWith("/paciente/") ||
+    pathname === "/atendimento" ||
+    pathname.startsWith("/atendimento/");
 
   return (
     <>
       <NavigationLoader />
-      {!telaDeAutenticacao && <Header />}
-      <main>{children}</main>
-      {!telaDeAutenticacao && <Footer />}
-      {!telaDeAutenticacao && <WhatsAppFloat />}
+      {telaDePainel ? (
+        children
+      ) : (
+        <>
+          {!telaDeAutenticacao && <Header />}
+          <main>{children}</main>
+          {!telaDeAutenticacao && <Footer />}
+          {!telaDeAutenticacao && <WhatsAppFloat />}
+        </>
+      )}
     </>
   );
 }

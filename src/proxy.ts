@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import {
   getAuthenticatedPath,
-  isAdminEmail,
+  isAdminUser,
 } from "@/lib/auth/redirects";
 import { updateSession } from "@/lib/supabase/proxy";
 
@@ -21,7 +21,7 @@ export async function proxy(request: NextRequest) {
   if (pathname === "/login") {
     if (user) {
       const destination = getAuthenticatedPath(
-        user.email,
+        user,
         request.nextUrl.searchParams.get("next")
       );
       return redirect(destination);
@@ -32,7 +32,7 @@ export async function proxy(request: NextRequest) {
 
   if (pathname === "/") {
     const destination = user
-      ? getAuthenticatedPath(user.email)
+      ? getAuthenticatedPath(user)
       : "/login";
     return redirect(destination);
   }
@@ -50,13 +50,25 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith("/admin/") ||
     pathname === "/atendimento" ||
     pathname.startsWith("/atendimento/");
-  if (isAdministrativeRoute && !isAdminEmail(user.email)) {
+  if (isAdministrativeRoute && !isAdminUser(user)) {
     return redirect("/paciente");
+  }
+
+  const isPatientRoute =
+    pathname === "/paciente" || pathname.startsWith("/paciente/");
+  if (isPatientRoute && isAdminUser(user)) {
+    return redirect("/admin");
   }
 
   return response;
 }
 
 export const config = {
-  matcher: ["/", "/login", "/admin/:path*", "/paciente", "/atendimento/:path*"],
+  matcher: [
+    "/",
+    "/login",
+    "/admin/:path*",
+    "/paciente/:path*",
+    "/atendimento/:path*",
+  ],
 };

@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { isAdminUser } from "@/lib/auth/redirects";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-const EMAIL_ADMIN = "psi.daianedamasceno@gmail.com";
 
 async function verificarAdmin() {
   const { createClient } = await import("@/lib/supabase/server");
@@ -15,11 +14,7 @@ async function verificarAdmin() {
     error,
   } = await supabase.auth.getUser();
 
-  if (
-    error ||
-    !user ||
-    user.email?.toLowerCase() !== EMAIL_ADMIN
-  ) {
+  if (error || !isAdminUser(user)) {
     return false;
   }
 

@@ -4,9 +4,6 @@ import { useState } from "react";
 
 type Agendamento = {
   id: number;
-  nome: string;
-  email: string;
-  telefone: string;
   servico: string;
   data: string;
   horario: string;
@@ -48,6 +45,7 @@ export default function PagamentoPage() {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "same-origin",
         body: JSON.stringify({
           agendamentoId: agendamento.id,
           servico: agendamento.servico,

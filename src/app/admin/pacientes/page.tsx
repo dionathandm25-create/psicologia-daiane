@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { isAdminUser } from "@/lib/auth/redirects";
 
 type Paciente = {
   id: number;
@@ -18,8 +19,6 @@ type Paciente = {
   quantidade_consultas: number;
   ultimo_atendimento: string | null;
 };
-
-const EMAIL_ADMIN = "psi.daianedamasceno@gmail.com";
 
 function formatarData(data: string | null) {
   if (!data) return "Nenhum atendimento";
@@ -125,10 +124,7 @@ export default function PacientesPage() {
           return;
         }
 
-        const email =
-          session.user.email?.toLowerCase();
-
-        if (email !== EMAIL_ADMIN) {
+        if (!isAdminUser(session.user)) {
           await supabase.auth.signOut();
 
           setErro(

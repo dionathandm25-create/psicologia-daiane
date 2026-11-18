@@ -74,7 +74,7 @@ export default function LoginPage() {
         window.location.search
       ).get("next");
       window.location.assign(
-        getAuthenticatedPath(data.user.email, requestedPath)
+        getAuthenticatedPath(data.user, requestedPath)
       );
     } catch (error) {
       console.error("Falha inesperada ao entrar:", error);

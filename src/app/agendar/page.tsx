@@ -317,15 +317,9 @@ export default function AgendarPage() {
 
       const agendamentoParaPagamento = {
         id: resultado.agendamento_id,
-        paciente_id: resultado.paciente_id,
-        nome: nome.trim(),
-        cpf: cpf.trim(),
-        email: email.trim().toLowerCase(),
-        telefone: telefone.trim(),
         servico,
         data,
         horario,
-        payment_status: "pendente",
       };
 
       localStorage.setItem(

@@ -8,9 +8,7 @@ import {
 } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-
-const EMAIL_ADMIN =
-  "psi.daianedamasceno@gmail.com";
+import { isAdminUser } from "@/lib/auth/redirects";
 
 const TIPOS_REGISTRO = [
   {
@@ -239,6 +237,9 @@ export default function AtendimentoPage() {
   const [erro, setErro] =
     useState("");
 
+  const [atendimentoNaoEncontrado, setAtendimentoNaoEncontrado] =
+    useState(false);
+
   const [agora, setAgora] =
     useState(Date.now());
 
@@ -366,7 +367,11 @@ export default function AtendimentoPage() {
 
   useEffect(() => {
     async function carregar() {
-      if (!id) return;
+      if (!id) {
+        setAtendimentoNaoEncontrado(true);
+        setLoading(false);
+        return;
+      }
 
       try {
         const supabase =
@@ -384,45 +389,54 @@ export default function AtendimentoPage() {
           );
         }
 
-        const emailUsuario =
-          session?.user.email?.toLowerCase();
-
         if (
           !session ||
-          emailUsuario !== EMAIL_ADMIN
+          !isAdminUser(session.user)
         ) {
           router.replace("/admin");
           return;
         }
 
-        const {
-          data,
-          error,
-        } = await supabase
-          .from("agendamentos")
-          .select(
-            "id, nome, email, telefone, servico, data, horario, payment_status, atendimento_status, atendimento_inicio, atendimento_fim"
-          )
-          .eq("id", id)
-          .single();
+        const resposta = await fetch(
+          `/api/admin/agendamentos?id=${encodeURIComponent(id)}`,
+          { cache: "no-store" }
+        );
+        const resultado = await resposta.json();
 
-        if (error) {
-          console.error(
-            "ERRO AO CARREGAR ATENDIMENTO:",
-            error
-          );
+        if (resposta.status === 401) {
+          router.replace("/admin");
+          return;
+        }
 
+        if (resposta.status === 404) {
+          setAgendamento(null);
+          setAtendimentoNaoEncontrado(true);
+          setErro("");
+          return;
+        }
+
+        if (!resposta.ok) {
           throw new Error(
-            "Não foi possível encontrar este agendamento."
+            resultado?.error ||
+              "Não foi possível carregar o atendimento."
           );
         }
 
-        setAgendamento(data);
+        const atendimento: Agendamento | undefined =
+          resultado?.agendamento;
+        if (!atendimento) {
+          throw new Error(
+            "A resposta não contém os dados do atendimento."
+          );
+        }
+
+        setAtendimentoNaoEncontrado(false);
+        setAgendamento(atendimento);
         setErro("");
 
         await Promise.all([
-          carregarRegistros(data.id),
-          carregarAudios(data.id),
+          carregarRegistros(atendimento.id),
+          carregarAudios(atendimento.id),
         ]);
       } catch (error) {
         console.error(
@@ -1505,7 +1519,9 @@ export default function AtendimentoPage() {
       <div className="min-h-screen px-6 py-16">
         <div className="mx-auto max-w-4xl rounded-3xl bg-white/90 p-8 text-center shadow-md">
           <h1 className="text-2xl font-bold text-slate-800">
-            Atendimento não encontrado
+            {atendimentoNaoEncontrado
+              ? "Atendimento não encontrado"
+              : "Não foi possível carregar o atendimento"}
           </h1>
 
           <p className="mt-4 text-red-600">

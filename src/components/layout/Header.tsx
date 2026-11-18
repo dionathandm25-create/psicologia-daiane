@@ -4,7 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { isAdminEmail } from "@/lib/auth/redirects";
+import {
+  isAdminUser,
+  type AuthenticatedUser,
+} from "@/lib/auth/redirects";
 import { createClient } from "@/lib/supabase/client";
 
 type Acesso = "publico" | "paciente" | "admin" | null;
@@ -23,15 +26,15 @@ export default function Header() {
     let ativo = true;
     const supabase = createClient();
 
-    function atualizarAcesso(email: string | null | undefined) {
+    function atualizarAcesso(user: AuthenticatedUser) {
       if (!ativo) return;
-      setAcesso(email ? (isAdminEmail(email) ? "admin" : "paciente") : "publico");
+      setAcesso(user ? (isAdminUser(user) ? "admin" : "paciente") : "publico");
     }
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      atualizarAcesso(session?.user.email);
+      atualizarAcesso(session?.user);
     });
 
     void supabase.auth
@@ -49,7 +52,7 @@ export default function Header() {
           return;
         }
 
-        atualizarAcesso(data.user?.email);
+        atualizarAcesso(data.user);
       })
       .catch((error: unknown) => {
         if (!ativo) return;
@@ -113,17 +116,17 @@ export default function Header() {
     acesso === "admin"
       ? [
           { label: "Painel", href: "/admin" },
-          { label: "Agenda", href: "/admin#agenda" },
+          { label: "Agenda", href: "/admin/agenda" },
           { label: "Pacientes", href: "/admin/pacientes" },
           { label: "Financeiro", href: "/admin/financeiro" },
         ]
       : acesso === "paciente"
         ? [
             { label: "Meu painel", href: "/paciente" },
-            { label: "Consultas", href: "/paciente#consultas" },
-            { label: "Histórico", href: "/paciente#historico" },
+            { label: "Consultas", href: "/paciente/consultas" },
+            { label: "Histórico", href: "/paciente/historico" },
             { label: "Agendar", href: "/agendar" },
-            { label: "Suporte", href: "/paciente#suporte" },
+            { label: "Suporte", href: "/paciente/suporte" },
           ]
         : acesso === "publico"
           ? [
@@ -165,12 +168,12 @@ export default function Header() {
         transform: `translateY(${-100 * progressoOcultacao}%)`,
       }}
     >
-      <div className="relative mx-auto flex min-h-[68px] max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:min-h-[76px] lg:px-8">
+      <div       className="relative mx-auto flex min-h-[68px] max-w-7xl items-center justify-between gap-3 px-4 sm:gap-4 sm:px-6 lg:min-h-[76px] lg:px-8">
         <Link
           href={rotaInicial}
           aria-label="Transformação Saúde — página inicial"
           onClick={() => setMenuAbertoEm(null)}
-          className="flex min-w-0 items-center gap-2.5 rounded-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#BD6F0A] sm:gap-3"
+          className="flex min-w-0 flex-1 items-center gap-2.5 rounded-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#BD6F0A] sm:flex-initial sm:gap-3"
         >
           <Image
             src="/images/transformacao-saude/logo/simbolo-integrado.png"
@@ -180,10 +183,10 @@ export default function Header() {
             className="h-10 w-10 shrink-0 object-contain sm:h-12 sm:w-12"
           />
           <span className="min-w-0 leading-tight">
-            <span className="block truncate text-sm font-bold tracking-wide text-[#640219] sm:text-base">
+            <span className="block whitespace-normal text-[13px] font-bold tracking-wide text-[#640219] sm:text-base">
               Transformação Saúde
             </span>
-            <span className="mt-1 block truncate text-[10px] font-medium tracking-wide text-[#805c48] sm:text-xs">
+            <span className="mt-1 block whitespace-normal text-[10px] font-medium tracking-wide text-[#805c48] sm:text-xs">
               Dra. Daiane Damasceno
             </span>
           </span>
@@ -229,8 +232,11 @@ export default function Header() {
               } absolute left-0 right-0 top-full z-50 flex-col gap-1 rounded-b-2xl border border-t-0 border-[#BD6F0A]/15 bg-[#fffaf3] p-3 shadow-[0_16px_30px_rgba(100,2,25,0.12)] lg:static lg:flex lg:flex-row lg:items-center lg:gap-1 lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none`}
             >
               {itens.map((item) => {
-                const caminho = item.href.split("#")[0];
-                const ativo = !item.href.includes("#") && pathname === caminho;
+                const ativo =
+                  pathname === item.href ||
+                  (item.href !== "/admin" &&
+                    item.href !== "/paciente" &&
+                    pathname.startsWith(`${item.href}/`));
 
                 return (
                   <Link

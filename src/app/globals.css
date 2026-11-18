@@ -3,6 +3,7 @@
 :root {
   --background: #feedd9;
   --foreground: #640219;
+  --dashboard-sidebar-width: 17rem;
 }
 
 @theme inline {
@@ -32,6 +33,21 @@ body::before {
   background-size: cover;
   content: "";
   pointer-events: none;
+}
+
+.dashboard-sidebar {
+  z-index: 30;
+  width: var(--dashboard-sidebar-width);
+}
+
+.dashboard-layout-content {
+  min-width: 0;
+}
+
+@media (min-width: 64rem) {
+  .dashboard-layout-content {
+    margin-left: var(--dashboard-sidebar-width);
+  }
 }
 
 .brand-card-grid {

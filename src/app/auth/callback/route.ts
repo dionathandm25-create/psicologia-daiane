@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
-import { getAuthenticatedPath } from "@/lib/auth/redirects";
-
-const EMAIL_ADMIN = "psi.daianedamasceno@gmail.com";
+import {
+  getAuthenticatedPath,
+  isAdminUser,
+} from "@/lib/auth/redirects";
 
 function criarAdminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -63,8 +64,8 @@ export async function GET(request: Request) {
     );
   }
 
-  if (email === EMAIL_ADMIN.toLowerCase()) {
-    const destination = getAuthenticatedPath(email, requestedPath);
+  if (isAdminUser(user)) {
+    const destination = getAuthenticatedPath(user, requestedPath);
     return NextResponse.redirect(`${origin}${destination}`);
   }
 
@@ -149,7 +150,7 @@ export async function GET(request: Request) {
       }
     }
 
-    const destination = getAuthenticatedPath(email, requestedPath);
+    const destination = getAuthenticatedPath(user, requestedPath);
     return NextResponse.redirect(`${origin}${destination}`);
   } catch (error) {
     console.error(

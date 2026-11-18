@@ -1,14 +1,20 @@
-export const EMAIL_ADMIN = "psi.daianedamasceno@gmail.com";
+export type AuthenticatedUser = {
+  app_metadata?: object | null;
+} | null | undefined;
 
-export function isAdminEmail(email: string | null | undefined) {
-  return email?.trim().toLowerCase() === EMAIL_ADMIN;
+export function isAdminUser(user: AuthenticatedUser) {
+  const metadata = user?.app_metadata;
+  return metadata !== null &&
+    metadata !== undefined &&
+    "role" in metadata &&
+    metadata.role === "admin";
 }
 
 export function getAuthenticatedPath(
-  email: string | null | undefined,
+  user: AuthenticatedUser,
   requestedPath?: string | null
 ) {
-  const isAdmin = isAdminEmail(email);
+  const isAdmin = isAdminUser(user);
   const homePath = isAdmin ? "/admin" : "/paciente";
 
   if (!requestedPath) {

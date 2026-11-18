@@ -2,10 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-
-const EMAIL_ADMIN = "psi.daianedamasceno@gmail.com";
+import { isAdminUser } from "@/lib/auth/redirects";
 
 type Pagamento = {
   id: number;
@@ -179,15 +177,12 @@ export default function FinanceiroPage() {
           data: { user },
         } = await supabase.auth.getUser();
 
-        if (
-          !user ||
-          user.email?.toLowerCase() !== EMAIL_ADMIN
-        ) {
+        if (!user || !isAdminUser(user)) {
           window.location.href = "/login";
           return;
         }
 
-        setEmail(user.email);
+        setEmail(user.email ?? "");
         setLogado(true);
 
         await carregarFinanceiro();
@@ -204,18 +199,6 @@ export default function FinanceiroPage() {
 
     verificarAcesso();
   }, []);
-
-  async function sair() {
-    const { error } = await supabase.auth.signOut();
-
-    if (error) {
-      console.error("Erro ao encerrar sessão:", error);
-      setErro("Não foi possível encerrar sua sessão. Tente novamente.");
-      return;
-    }
-
-    window.location.href = "/login";
-  }
 
   const pagamentosFiltrados = useMemo(() => {
     if (!dados) return [];
@@ -278,154 +261,7 @@ export default function FinanceiroPage() {
 
   return (
     <div className="min-h-screen bg-transparent text-slate-900">
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 border-r border-pink-100 bg-white/95 shadow-lg backdrop-blur-sm lg:flex">
-        <div className="flex h-full w-full flex-col">
-          <div className="border-b border-pink-100 px-5 py-5">
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl">
-                <Image
-                  src="/images/transformacao-saude/logo/simbolo-integrado.png"
-                  alt="Logomarca Transformação Saúde"
-                  width={48}
-                  height={48}
-                  className="h-full w-full object-contain p-1"
-                />
-              </div>
-
-              <div className="min-w-0">
-                <p className="truncate text-sm font-bold text-slate-800">
-                  Dra. Daiane
-                </p>
-
-                <p className="truncate text-xs text-slate-500">
-                  Painel administrativo
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <nav className="flex-1 overflow-y-auto px-3 py-5">
-            <p className="px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-pink-400">
-              Principal
-            </p>
-
-            <div className="space-y-1">
-              <a
-                href="/admin"
-                className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-pink-50 hover:text-pink-700"
-              >
-                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-50 text-xs">
-                  ⌂
-                </span>
-
-                <span>Início</span>
-              </a>
-
-              <a
-                href="/admin#agenda"
-                className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-pink-50 hover:text-pink-700"
-              >
-                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-50 text-xs">
-                  ▣
-                </span>
-
-                <span>Agenda</span>
-              </a>
-
-              <Link
-                href="/admin/pacientes"
-                className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-pink-50 hover:text-pink-700"
-              >
-                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-50 text-xs">
-                  ♙
-                </span>
-
-                <span>Pacientes</span>
-              </Link>
-
-              <Link
-                href="/admin/pacientes"
-                className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-pink-50 hover:text-pink-700"
-              >
-                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-50 text-xs">
-                  ▤
-                </span>
-
-                <span>Prontuários</span>
-              </Link>
-
-              <a
-                href="/admin/financeiro"
-                className="flex w-full items-center gap-3 rounded-xl bg-pink-100 px-4 py-3 text-sm font-semibold text-pink-700"
-              >
-                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-white text-xs shadow-sm">
-                  R$
-                </span>
-
-                <span>Financeiro</span>
-              </a>
-            </div>
-
-          </nav>
-
-          <div className="border-t border-pink-100 p-4">
-            <div className="mb-3 rounded-2xl bg-pink-50 px-3 py-3">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-pink-400">
-                Administrador
-              </p>
-
-              <p className="mt-1 truncate text-xs text-slate-600">
-                {email}
-              </p>
-            </div>
-
-            <button
-              type="button"
-              onClick={sair}
-              className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-600 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"
-            >
-              <span>↪</span>
-              Sair
-            </button>
-          </div>
-        </div>
-      </aside>
-
-      <div className="border-b border-pink-100 bg-white/95 shadow-sm lg:hidden">
-        <div className="flex items-center justify-between gap-3 px-4 py-3">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl">
-              <Image
-                src="/images/transformacao-saude/logo/simbolo-integrado.png"
-                alt="Logomarca Transformação Saúde"
-                width={40}
-                height={40}
-                className="h-full w-full object-contain p-1"
-              />
-            </div>
-
-            <div className="min-w-0">
-              <p className="truncate text-sm font-bold text-slate-800">
-                Dra. Daiane
-              </p>
-
-              <p className="truncate text-xs text-slate-500">
-                Financeiro
-              </p>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => (window.location.href = "/admin")}
-            className="rounded-xl border border-pink-100 bg-pink-50 px-3 py-2 text-sm font-semibold text-pink-700"
-          >
-            Painel
-          </button>
-        </div>
-      </div>
-
-      <main className="min-w-0 lg:ml-64">
+      <main className="min-w-0">
         <div className="mx-auto max-w-[1500px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
           <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>

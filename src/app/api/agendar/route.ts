@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { isAdminUser } from "@/lib/auth/redirects";
 import {
   horariosPorDia,
   obterDiaSemana,
 } from "@/lib/horarios";
+import { createClient as createServerClient } from "@/lib/supabase/server";
+import { createGuestPaymentToken } from "@/lib/security/guest-payment-token";
 
 function dataISOValida(data: unknown): data is string {
   if (
@@ -140,6 +143,30 @@ export async function POST(request: NextRequest) {
       }
     );
 
+    const sessionClient = await createServerClient();
+    const {
+      data: { user },
+    } = await sessionClient.auth.getUser();
+    const authenticatedPatient =
+      user && !isAdminUser(user) ? user : null;
+    const submittedEmail =
+      typeof email === "string" ? email.trim().toLowerCase() : "";
+    const emailPaciente =
+      authenticatedPatient?.email?.trim().toLowerCase() ||
+      submittedEmail;
+
+    if (!emailPaciente) {
+      return NextResponse.json(
+        { error: "Informe um e-mail válido para o agendamento." },
+        { status: 400 }
+      );
+    }
+
+    const nomeInformado = String(nome).trim();
+    const telefoneInformado =
+      typeof telefone === "string" ? telefone.trim() : "";
+    const cpfInformado = typeof cpf === "string" ? cpf.trim() : "";
+
     /*
      * 1. Verifica se o horário já está ocupado.
      */
@@ -181,133 +208,114 @@ export async function POST(request: NextRequest) {
     /*
      * 2. Normaliza os dados.
      */
-    const nomePaciente = String(nome).trim();
+    let paciente:
+      | {
+          id: number;
+          nome: string;
+          email: string | null;
+          telefone: string | null;
+        }
+      | null = null;
 
-    const emailPaciente = String(email)
-      .trim()
-      .toLowerCase();
+    if (authenticatedPatient) {
+      const { data: pacientesVinculados, error: erroVinculo } =
+        await supabase
+          .from("pacientes")
+          .select("id, nome, email, telefone")
+          .eq("usuario_id", authenticatedPatient.id)
+          .limit(2);
 
-    const telefonePaciente =
-      typeof telefone === "string"
-        ? telefone.trim()
-        : "";
-
-    const cpfPaciente =
-      typeof cpf === "string"
-        ? cpf.trim()
-        : "";
-
-    /*
-     * 3. Procura paciente existente pelo e-mail.
-     */
-    const {
-      data: pacienteExistente,
-      error: erroBuscaPaciente,
-    } = await supabase
-      .from("pacientes")
-      .select("id")
-      .eq("email", emailPaciente)
-      .limit(1)
-      .maybeSingle();
-
-    if (erroBuscaPaciente) {
-      console.error(
-        "ERRO AO PROCURAR PACIENTE:",
-        erroBuscaPaciente
-      );
-
-      return NextResponse.json(
-        {
-          error:
-            "Não foi possível verificar o cadastro do paciente.",
-        },
-        { status: 500 }
-      );
-    }
-
-    let pacienteId: number;
-
-    /*
-     * 4. Se o paciente já existe, atualiza
-     * os dados básicos.
-     */
-    if (pacienteExistente) {
-      pacienteId = pacienteExistente.id;
-
-      const {
-        error: erroAtualizacaoPaciente,
-      } = await supabase
-        .from("pacientes")
-        .update({
-          nome: nomePaciente,
-          telefone:
-            telefonePaciente || null,
-          cpf: cpfPaciente || null,
-          email: emailPaciente,
-        })
-        .eq("id", pacienteId);
-
-      if (erroAtualizacaoPaciente) {
-        console.error(
-          "ERRO AO ATUALIZAR PACIENTE:",
-          erroAtualizacaoPaciente
-        );
-
+      if (erroVinculo) {
+        console.error("ERRO AO VERIFICAR VÍNCULO DO PACIENTE:", erroVinculo);
         return NextResponse.json(
-          {
-            error:
-              "Não foi possível atualizar o cadastro do paciente.",
-          },
+          { error: "Não foi possível verificar seu cadastro." },
           { status: 500 }
         );
       }
 
-      console.log(
-        "PACIENTE EXISTENTE ENCONTRADO:",
-        pacienteId
-      );
-    } else {
-      /*
-       * 5. Se não existe, cria um novo paciente.
-       */
-      const {
-        data: novoPaciente,
-        error: erroCriacaoPaciente,
-      } = await supabase
-        .from("pacientes")
-        .insert({
-          nome: nomePaciente,
-          email: emailPaciente,
-          telefone:
-            telefonePaciente || null,
-          cpf: cpfPaciente || null,
-          status: "ativo",
-        })
-        .select("id")
-        .single();
+      if (pacientesVinculados && pacientesVinculados.length > 1) {
+        return NextResponse.json(
+          { error: "Há mais de um cadastro vinculado à sua conta." },
+          { status: 409 }
+        );
+      }
+
+      paciente = pacientesVinculados?.[0] ?? null;
+    }
+
+    if (!paciente) {
+      const { data: pacientesPorEmail, error: erroBuscaPaciente } =
+        await supabase
+          .from("pacientes")
+          .select("id")
+          .eq("email", emailPaciente)
+          .limit(2);
+
+      if (erroBuscaPaciente) {
+        console.error(
+          "ERRO AO PROCURAR PACIENTE:",
+          erroBuscaPaciente
+        );
+        return NextResponse.json(
+          { error: "Não foi possível verificar o cadastro." },
+          { status: 500 }
+        );
+      }
+
+      if (pacientesPorEmail && pacientesPorEmail.length > 0) {
+        return NextResponse.json(
+          {
+            error:
+              "Não foi possível vincular esse cadastro. Entre na sua conta ou use outro e-mail.",
+          },
+          { status: 409 }
+        );
+      }
+
+      const { data: novoPaciente, error: erroCriacaoPaciente } =
+        await supabase
+          .from("pacientes")
+          .insert({
+            nome: nomeInformado,
+            email: emailPaciente,
+            telefone: telefoneInformado || null,
+            cpf: cpfInformado || null,
+            status: "ativo",
+            ...(authenticatedPatient
+              ? { usuario_id: authenticatedPatient.id }
+              : {}),
+          })
+          .select("id, nome, email, telefone")
+          .single();
 
       if (erroCriacaoPaciente || !novoPaciente) {
+        if (erroCriacaoPaciente?.code === "23505") {
+          return NextResponse.json(
+            {
+              error:
+                "Esse e-mail já possui cadastro. Entre na sua conta para continuar.",
+            },
+            { status: 409 }
+          );
+        }
+
         console.error(
           "ERRO AO CRIAR PACIENTE:",
           erroCriacaoPaciente
         );
-
         return NextResponse.json(
-          {
-            error:
-              "Não foi possível criar o cadastro do paciente.",
-          },
+          { error: "Não foi possível criar o cadastro do paciente." },
           { status: 500 }
         );
       }
 
-      pacienteId = novoPaciente.id;
-
-      console.log(
-        "NOVO PACIENTE CRIADO:",
-        pacienteId
-      );
+      paciente = novoPaciente;
     }
+
+    const pacienteId = paciente.id;
+    const nomePaciente = paciente.nome || nomeInformado;
+    const emailAgendamento = paciente.email || emailPaciente;
+    const telefonePaciente = paciente.telefone || null;
 
     /*
      * 6. Cria o agendamento vinculado ao paciente.
@@ -324,9 +332,8 @@ export async function POST(request: NextRequest) {
       .insert({
         paciente_id: pacienteId,
         nome: nomePaciente,
-        email: emailPaciente,
-        telefone:
-          telefonePaciente || null,
+        email: emailAgendamento,
+        telefone: telefonePaciente,
         servico,
         valor,
         data,
@@ -361,17 +368,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(
-      "AGENDAMENTO CRIADO:",
-      novoAgendamento
-    );
-
-    return NextResponse.json({
+    const resposta = NextResponse.json({
       ok: true,
-      paciente_id: pacienteId,
       agendamento_id: novoAgendamento.id,
       valor: novoAgendamento.valor,
     });
+
+    if (!authenticatedPatient && Number(novoAgendamento.valor) > 0) {
+      resposta.cookies.set(
+        `guest_payment_${novoAgendamento.id}`,
+        createGuestPaymentToken(
+          novoAgendamento.id,
+          serviceRoleKey
+        ),
+        {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "strict",
+          maxAge: 7 * 24 * 60 * 60,
+          path: "/api/pagamento",
+        }
+      );
+    }
+
+    return resposta;
   } catch (error) {
     console.error(
       "ERRO INTERNO AO SALVAR AGENDAMENTO:",
